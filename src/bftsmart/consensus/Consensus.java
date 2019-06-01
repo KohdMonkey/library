@@ -15,10 +15,7 @@ limitations under the License.
 */
 package bftsmart.consensus;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 import bftsmart.tom.core.ExecutionManager;
@@ -32,6 +29,10 @@ import org.slf4j.LoggerFactory;
  * for the Byzantine fault model described in Cachin's 'Yet Another Visit to Paxos' (April 2011)
  */
 public class Consensus {
+    //Begin: Tuan
+    private long timeout = 0; //a timeout to allow
+    Date date = new Date();
+    //End: Tuan
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -319,4 +320,24 @@ public class Consensus {
             }
         }
     }
+
+
+    /*Called by the Acceptor object, to set the timeout for the current consensus*/
+    public void setTimeout(int duration) {
+        if(timeout != 0) {
+            timeout = date.getTime() + duration;
+        }
+    }
+
+
+    /*Called by the Acceptor object, to determine whether or not consensus instance has timed out*/
+    public boolean hasTimedOut() {
+        if(timeout != 0) {
+            long currTime = date.getTime();
+            return currTime > timeout;
+        }
+        return false;
+    }
+
+
 }

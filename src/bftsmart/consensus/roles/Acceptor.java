@@ -38,6 +38,10 @@ import bftsmart.tom.core.TOMLayer;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.TOMUtil;
 
+//Tuan
+import bftsmart.byzantine.Observer;
+import java.util.Date;
+
 /**
  * This class represents the acceptor role in the consensus protocol. This class
  * work together with the TOMLayer class in order to supply a atomic multicast

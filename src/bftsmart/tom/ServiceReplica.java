@@ -271,9 +271,9 @@ public class ServiceReplica {
         };
         t.start();
     }
-    
+
     /**
-     * 
+     *
      * @deprecated
      */
     public void receiveMessages(int consId[], int regencies[], int leaders[], CertifiedDecision[] cDecs, TOMMessage[][] requests) {
@@ -289,7 +289,7 @@ public class ServiceReplica {
             int requestCount = 0;
             noop = true;
             for (TOMMessage request : requestsFromConsensus) {
-                
+
                 logger.debug("Processing TOMMessage from client " + request.getSender() + " with sequence number " + request.getSequence() + " for session " + request.getSession() + " decided in consensus " + consId[consensusCount]);
 
                 if (request.getViewID() == SVController.getCurrentViewId()) {
@@ -306,38 +306,38 @@ public class ServiceReplica {
                                     request.numOfNonces, request.seed, regencies[consensusCount], leaders[consensusCount],
                                     consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, false);
                             if (requestCount + 1 == requestsFromConsensus.length) {
-                                
+
                                 msgCtx.setLastInBatch();
                             }   request.deliveryTime = System.nanoTime();
                             if (executor instanceof BatchExecutable) {
-                                
+
                                logger.debug("Batching request from " + request.getSender());
-                                
+
                                 // This is used to deliver the content decided by a consensus instance directly to
                                 // a Recoverable object. It is useful to allow the application to create a log and
                                 // store the proof associated with decisions (which are needed by replicas
                                 // that are asking for a state transfer).
                                 if (this.recoverer != null) this.recoverer.Op(msgCtx.getConsensusId(), request.getContent(), msgCtx);
-                                
+
                                 // deliver requests and contexts to the executor later
                                 msgCtxts.add(msgCtx);
                                 toBatch.add(request);
                             } else if (executor instanceof SingleExecutable) {
-                                
+
                                 logger.debug("Delivering request from " + request.getSender() + " via SingleExecutable");
-                                
+
                                 // This is used to deliver the content decided by a consensus instance directly to
                                 // a Recoverable object. It is useful to allow the application to create a log and
                                 // store the proof associated with decisions (which are needed by replicas
                                 // that are asking for a state transfer).
                                 if (this.recoverer != null) this.recoverer.Op(msgCtx.getConsensusId(), request.getContent(), msgCtx);
-                                
+
                                 // This is used to deliver the requests to the application and obtain a reply to deliver
                                 //to the clients. The raw decision is passed to the application in the line above.
                                 TOMMessage response = ((SingleExecutable) executor).executeOrdered(id, SVController.getCurrentViewId(), request.getContent(), msgCtx);
-                                
+
                                 if (response != null) {
-                                    
+
                                     logger.debug("sending reply to " + response.getSender());
                                     replier.manageReply(response, msgCtx);
                                 }
@@ -350,10 +350,10 @@ public class ServiceReplica {
                         default: //this code should never be executed
                             throw new RuntimeException("Should never reach here!");
                     }
-                } else if (request.getViewID() < SVController.getCurrentViewId()) { 
+                } else if (request.getViewID() < SVController.getCurrentViewId()) {
                     // message sender had an old view, resend the message to
                     // him (but only if it came from consensus an not state transfer)
-                    
+
                     tomLayer.getCommunication().send(new int[]{request.getSender()}, new TOMMessage(SVController.getStaticConf().getProcessId(),
                             request.getSession(), request.getSequence(), request.getOperationId(), TOMUtil.getBytes(SVController.getCurrentView()), SVController.getCurrentViewId(), request.getReqType()));
                 }
@@ -365,7 +365,7 @@ public class ServiceReplica {
             // operation contained in the batch. The recoverer must be notified about this,
             // hence the invocation of "noop"
             if (noop && this.recoverer != null) {
-                
+
                 logger.debug("Delivering a no-op to the recoverer");
 
                 logger.info("A consensus instance finished, but there were no commands to deliver to the application.");
@@ -389,21 +389,21 @@ public class ServiceReplica {
                             m.numOfNonces, m.seed, regencies[consensusCount], leaders[consensusCount],
                             consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, true);
                         msgCtx[line].setLastInBatch();
-                        
+
                         line++;
                     }
                 }
 
                 this.recoverer.noOp(consId[consensusCount], batch, msgCtx);
-                
+
                 //MessageContext msgCtx = new MessageContext(-1, -1, null, -1, -1, -1, -1, null, // Since it is a noop, there is no need to pass info about the client...
                 //        -1, 0, 0, regencies[consensusCount], leaders[consensusCount], consId[consensusCount], cDecs[consensusCount].getConsMessages(), //... but there is still need to pass info about the consensus
                 //        null, true); // there is no command that is the first of the batch, since it is a noop
                 //msgCtx.setLastInBatch();
-                
+
                 //this.recoverer.noOp(msgCtx.getConsensusId(), msgCtx);
             }
-            
+
             consensusCount++;
         }
 
@@ -420,13 +420,13 @@ public class ServiceReplica {
 
             MessageContext[] msgContexts = new MessageContext[msgCtxts.size()];
             msgContexts = msgCtxts.toArray(msgContexts);
-            
+
             //Deliver the batch and wait for replies
             TOMMessage[] replies = ((BatchExecutable) executor).executeBatch(id, SVController.getCurrentViewId(), batch, msgContexts);
 
             //Send the replies back to the client
             if (replies != null) {
-                
+
                 for (TOMMessage reply : replies) {
 
                     if (SVController.getStaticConf().getNumRepliers() > 0) {

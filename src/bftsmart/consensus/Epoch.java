@@ -29,7 +29,6 @@ import bftsmart.tom.core.messages.TOMMessage;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-
 /**
  * This class stands for a consensus epoch, as described in
  * Cachin's 'Yet Another Visit to Paxos' (April 2011)
@@ -499,4 +498,7 @@ public class Epoch implements Serializable {
         this.acceptSent = false;
         this.acceptCreated = false;
     }
+
+
+
 }
