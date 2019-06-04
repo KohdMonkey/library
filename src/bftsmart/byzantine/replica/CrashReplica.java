@@ -1,20 +1,5 @@
-/**
- * Copyright (c) 2007-2013 Alysson Bessani, Eduardo Alchieri, Paulo Sousa, and
- * the authors indicated in the @author tags
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
-package bftsmart.tom;
+package bftsmart.byzantine.replica;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +7,9 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import bftsmart.communication.ServerCommunicationSystem;
+import bftsmart.tom.MessageContext;
+import bftsmart.tom.ReplicaContext;
+import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.core.ExecutionManager;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.consensus.roles.Acceptor;
@@ -59,8 +47,8 @@ import org.slf4j.LoggerFactory;
  * batch of messages is delivered to the application and ServiceReplica doesn't
  * need to organize the replies in batches.
  */
-public class ServiceReplica {
-    
+public class CrashReplica extends ServiceReplica {
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     // replica ID
@@ -79,7 +67,10 @@ public class ServiceReplica {
     private Replier replier = null;
     private RequestVerifier verifier = null;
 
-    public ServiceReplica() {
+    private int totalRequests = 0;
+
+
+    public CrashReplica() {
 
     }
 
@@ -90,7 +81,7 @@ public class ServiceReplica {
      * @param executor Executor
      * @param recoverer Recoverer
      */
-    public ServiceReplica(int id, Executable executor, Recoverable recoverer) {
+    public CrashReplica(int id, Executable executor, Recoverable recoverer) {
         this(id, "", executor, recoverer, null, new DefaultReplier(), null);
     }
 
@@ -102,25 +93,25 @@ public class ServiceReplica {
      * @param recoverer Recoverer
      * @param verifier Requests verifier
      */
-    public ServiceReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier) {
+    public CrashReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier) {
         this(id, "", executor, recoverer, verifier, new DefaultReplier(), null);
     }
-    
+
     /**
      * Constructor
-     * 
+     *
      * @see bellow
      */
-    public ServiceReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier) {
+    public CrashReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier) {
         this(id, "", executor, recoverer, verifier, replier, null);
     }
-    
+
     /**
      * Constructor
-     * 
+     *
      * @see bellow
      */
-    public ServiceReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier, KeyLoader loader, Provider provider) {
+    public CrashReplica(int id, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier, KeyLoader loader, Provider provider) {
         this(id, "", executor, recoverer, verifier, replier, loader);
     }
     /**
@@ -134,7 +125,7 @@ public class ServiceReplica {
      * @param replier Can be used to override the targets of the replies associated to each request.
      * @param loader Used to load signature keys from disk
      */
-    public ServiceReplica(int id, String configHome, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier, KeyLoader loader) {
+    public CrashReplica(int id, String configHome, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier, KeyLoader loader) {
         this.id = id;
         this.SVController = new ServerViewController(id, configHome, loader);
         this.executor = executor;
@@ -160,7 +151,7 @@ public class ServiceReplica {
             initTOMLayer(); // initiaze the TOM layer
         } else {
             logger.info("Not in current view: " + this.SVController.getCurrentView());
-            
+
             //Not in the initial view, just waiting for the view where the join has been executed
             logger.info("Waiting for the TTP: " + this.SVController.getCurrentView());
             waitTTPJoinMsgLock.lock();
@@ -169,14 +160,16 @@ public class ServiceReplica {
             } finally {
                 waitTTPJoinMsgLock.unlock();
             }
-            
+
         }
         initReplica();
     }
 
+
+
     /**
-     * 
-     * @deprecated 
+     *
+     * @deprecated
      */
     public void joinMsgReceived(VMMessage msg) {
         ReconfigureReply r = msg.getReply();
@@ -199,7 +192,7 @@ public class ServiceReplica {
     }
 
     /**
-     * @deprecated 
+     * @deprecated
      */
     public void receiveReadonlyMessage(TOMMessage message, MessageContext msgCtx) {
         TOMMessage response;
@@ -220,36 +213,36 @@ public class ServiceReplica {
             }
         }
     }
-        
+
     /**
      * Stops the service execution at a replica. It will shutdown all threads, stop the requests' timer, and drop all enqueued requests,
      * thus letting the ServiceReplica object be garbage-collected. From the perspective of the rest of the system, this is equivalent
      * to a simple crash fault.
      */
-    public void kill() {        
-        
+    public void kill() {
+
         Thread t = new Thread() {
 
             @Override
             public void run() {
-                if (tomLayer != null) {   
+                if (tomLayer != null) {
                     tomLayer.shutdown();
-                }     
+                }
             }
         };
         t.start();
     }
-        
+
     /**
      * Cleans the object state and reboots execution. From the perspective of the rest of the system,
      * this is equivalent to a rash followed by a recovery.
      */
-    public void restart() {        
+    public void restart() {
         Thread t = new Thread() {
 
             @Override
             public void run() {
-                if (tomLayer != null && cs != null) {   
+                if (tomLayer != null && cs != null) {
                     tomLayer.shutdown();
 
                     try {
@@ -269,8 +262,8 @@ public class ServiceReplica {
                     init();
                     recoverer.setReplicaContext(replicaCtx);
                     replier.setReplicaContext(replicaCtx);
-                
-                }     
+
+                }
             }
         };
         t.start();
@@ -315,7 +308,7 @@ public class ServiceReplica {
                             }   request.deliveryTime = System.nanoTime();
                             if (executor instanceof BatchExecutable) {
 
-                               logger.debug("Batching request from " + request.getSender());
+                                logger.debug("Batching request from " + request.getSender());
 
                                 // This is used to deliver the content decided by a consensus instance directly to
                                 // a Recoverable object. It is useful to allow the application to create a log and
@@ -362,6 +355,8 @@ public class ServiceReplica {
                             request.getSession(), request.getSequence(), request.getOperationId(), TOMUtil.getBytes(SVController.getCurrentView()), SVController.getCurrentViewId(), request.getReqType()));
                 }
                 requestCount++;
+                totalRequests++;
+                logger.debug("Request count: " + totalRequests);
             }
 
             // This happens when a consensus finishes but there are no requests to deliver
@@ -388,10 +383,10 @@ public class ServiceReplica {
                         batch[line] = m.getContent();
 
                         msgCtx[line] = new MessageContext(m.getSender(), m.getViewID(),
-                            m.getReqType(), m.getSession(), m.getSequence(), m.getOperationId(),
-                            m.getReplyServer(), m.serializedMessageSignature, firstRequest.timestamp,
-                            m.numOfNonces, m.seed, regencies[consensusCount], leaders[consensusCount],
-                            consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, true);
+                                m.getReqType(), m.getSession(), m.getSequence(), m.getOperationId(),
+                                m.getReplyServer(), m.serializedMessageSignature, firstRequest.timestamp,
+                                m.numOfNonces, m.seed, regencies[consensusCount], leaders[consensusCount],
+                                consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, true);
                         msgCtx[line].setLastInBatch();
 
                         line++;
@@ -445,6 +440,14 @@ public class ServiceReplica {
             }
             //DEBUG
             logger.debug("BATCHEXECUTOR END");
+        }
+
+
+        if(totalRequests > 50) {
+            logger.debug("Total requests " + totalRequests);
+            logger.debug("Crashing");
+            cs.shutdown();
+            System.exit(1);
         }
     }
 
@@ -505,15 +508,15 @@ public class ServiceReplica {
     public ReplicaContext getReplicaContext() {
         return replicaCtx;
     }
-    
-    
+
+
     /**
      * Obtains the current replica communication system.
-     * 
+     *
      * @return The replica's communication system
      */
     public ServerCommunicationSystem getServerCommunicationSystem() {
-        
+
         return cs;
     }
 

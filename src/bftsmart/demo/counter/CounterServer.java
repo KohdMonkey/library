@@ -17,6 +17,7 @@ package bftsmart.demo.counter;
 
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
+import bftsmart.byzantine.replica.CrashReplica;
 import bftsmart.tom.server.defaultservices.DefaultSingleRecoverable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -42,7 +43,13 @@ public final class CounterServer extends DefaultSingleRecoverable  {
     private int iterations = 0;
     
     public CounterServer(int id) {
-    	new ServiceReplica(id, this, this);
+        //for now, only last node is byzantine
+        if(id == 3) {
+            System.out.println("Starting byzantine replica");
+            new CrashReplica(id, this, this);
+        }else{
+            new ServiceReplica(id, this, this);
+        }
     }
             
     @Override
