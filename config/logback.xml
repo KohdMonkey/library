@@ -34,9 +34,12 @@
   	<appender-ref ref="MIN-STDOUT" />
   	<!-- <appender-ref ref="STDOUT" /> -->
   </logger> 
-  
+
+   <logger name="bftsmart.consensus.roles.Acceptor" level="TRACE"></logger>
    <logger name="bftsmart.tom.ServiceReplica" level="TRACE"></logger>
+   <logger name="bftsmart.byzantine.RandomDelayAcceptor" level="TRACE"></logger>
    <logger name="bftsmart.byzantine.replica.CrashReplica" level="TRACE"></logger>
+   <logger name="bftsmart.byzantine.replica.RandomDelayReplica" level="TRACE"></logger>
   <!-- <logger name="bftsmart.byzantine.Observer" level="TRACE"></logger> -->
   <!-- SPECIFIC CLASS LOGS -->
   <!--

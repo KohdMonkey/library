@@ -13,19 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package bftsmart.consensus.roles;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.security.PrivateKey;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+package bftsmart.byzantine;
 
 import bftsmart.communication.ServerCommunicationSystem;
 import bftsmart.consensus.Consensus;
@@ -37,10 +25,21 @@ import bftsmart.tom.core.ExecutionManager;
 import bftsmart.tom.core.TOMLayer;
 import bftsmart.tom.core.messages.TOMMessage;
 import bftsmart.tom.util.TOMUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.security.PrivateKey;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 //Tuan
-import bftsmart.byzantine.Observer;
-import java.util.Date;
+import bftsmart.consensus.roles.Acceptor;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * This class represents the acceptor role in the consensus protocol. This class
@@ -49,7 +48,7 @@ import java.util.Date;
  *
  * @author Alysson Bessani
  */
-public class Acceptor {
+public class RandomDelayAcceptor extends Acceptor {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -68,18 +67,18 @@ public class Acceptor {
 	 */
 	private PrivateKey privKey;
 
-	public Acceptor() {
+	private final int MIN_DELAY = 1;
+	private final int MAX_DELAY = 10;
 
-	}
 
 	/**
 	 * Creates a new instance of Acceptor.
-	 * 
+	 *
 	 * @param communication Replicas communication system
 	 * @param factory       Message factory for PaW messages
 	 * @param controller
 	 */
-	public Acceptor(ServerCommunicationSystem communication, MessageFactory factory, ServerViewController controller) {
+	public RandomDelayAcceptor(ServerCommunicationSystem communication, MessageFactory factory, ServerViewController controller) {
 		this.communication = communication;
 		this.me = controller.getStaticConf().getProcessId();
 		this.factory = factory;
@@ -146,6 +145,14 @@ public class Acceptor {
 	 */
 	public void processMessage(ConsensusMessage msg) {
 		Consensus consensus = executionManager.getConsensus(msg.getNumber());
+
+//		try {
+//            int delay = ThreadLocalRandom.current().nextInt(MIN_DELAY, MAX_DELAY + 1);
+//            logger.debug("Sleeing for " + delay);
+//            Thread.sleep(delay);
+//        } catch(InterruptedException e) {
+//            System.out.println("sleep interrupted");
+//        }
 
 		consensus.lock.lock();
 		Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);

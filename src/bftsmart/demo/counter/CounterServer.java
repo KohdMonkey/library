@@ -15,6 +15,7 @@ limitations under the License.
 */
 package bftsmart.demo.counter;
 
+import bftsmart.byzantine.replica.RandomDelayReplica;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.byzantine.replica.CrashReplica;
@@ -46,7 +47,7 @@ public final class CounterServer extends DefaultSingleRecoverable  {
         //for now, only last node is byzantine
         if(id == 3) {
             System.out.println("Starting byzantine replica");
-            new CrashReplica(id, this, this);
+            new RandomDelayReplica(id, this, this);
         }else{
             new ServiceReplica(id, this, this);
         }
