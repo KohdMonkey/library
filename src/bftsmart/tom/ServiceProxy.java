@@ -16,6 +16,8 @@ limitations under the License.
 package bftsmart.tom;
 
 import bftsmart.tom.core.TOMSender;
+
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
@@ -56,13 +58,16 @@ public class ServiceProxy extends TOMSender {
 	private TOMMessage replies[] = null; // Replies from replicas are stored here
 	private int receivedReplies = 0; // Number of received replies
 	private TOMMessage response = null; // Reply delivered to the application
-	private int invokeTimeout = 40;
+	private int invokeTimeout = 5;
 	private Comparator<byte[]> comparator;
 	private Extractor extractor;
 	private Random rand = new Random(System.currentTimeMillis());
 	private int replyServer;
 	private HashResponseController hashResponseController;
 	private int invokeUnorderedHashedTimeout = 10;
+
+	private boolean speculative = false;
+//    byte[] lastRequest = {(byte)0xCA, (byte)0xFE, (byte)0xBA, (byte)0xBE};
 
 	/**
 	 * Constructor
@@ -177,6 +182,12 @@ public class ServiceProxy extends TOMSender {
          * @return The reply from the replicas related to request
          */
 	public byte[] invokeOrdered(byte[] request) {
+	    //if this is the first time executing this request, execute speculatively
+        logger.debug("new request: " + Arrays.toString(request));
+	    if(!speculative) {
+            speculative = true;
+        }
+
 		return invoke(request, TOMMessageType.ORDERED_REQUEST);
 	}
 
@@ -189,7 +200,8 @@ public class ServiceProxy extends TOMSender {
          * @return The reply from the replicas related to request
          */
         public byte[] invokeUnordered(byte[] request) {
-		return invoke(request, TOMMessageType.UNORDERED_REQUEST);
+
+        	return invoke(request, TOMMessageType.UNORDERED_REQUEST);
 	}
 
         /**
@@ -274,7 +286,14 @@ public class ServiceProxy extends TOMSender {
 					logger.info("Reply timeout for reqId=" + reqId + ", Replies received: " + receivedReplies);
 					canSendLock.unlock();
 
-					return null;
+					//retry if first timeout was due to speculative execution
+                    if(speculative) {
+                        logger.debug("Speculative case failed, reinvoking");
+                        speculative = false;
+                        return invoke(request,TOMMessageType.ORDERED_REQUEST);
+                    }else{
+                        return null;
+                    }
 				}
 			}
 		} catch (InterruptedException ex) {
@@ -296,7 +315,12 @@ public class ServiceProxy extends TOMSender {
 				logger.debug("###################RETRY#######################");
 				return invokeOrdered(request);
 			} else {
-				throw new RuntimeException("Received n-f replies without f+1 of them matching.");
+			    if(speculative) {
+			        speculative = false;
+                    return invoke(request,TOMMessageType.ORDERED_REQUEST);
+                }else{
+                    throw new RuntimeException("Received n-f replies without f+1 of them matching.");
+                }
 			}
 		} else {
 			//normal operation
@@ -409,22 +433,40 @@ public class ServiceProxy extends TOMSender {
 					}
 					replies[pos] = reply;
 
-					// Compare the reply just received, to the others
-					
-					for (int i = 0; i < replies.length; i++) {
 
-						if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
-								&& (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
-							sameContent++;
-							if (sameContent >= replyQuorum) {
-								response = extractor.extractResponse(replies, sameContent, pos);
-								reqId = -1;
-								this.sm.release(); // resumes the thread that is executing the "invoke" method
-								canReceiveLock.unlock();
-								return;
-							}
-						}
-					}
+					//speculative
+                    if(speculative) {
+                        for (int i = 0; i < replies.length; i++) {
+                            if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
+                                    && (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
+                                sameContent++;
+                            }
+                        }
+                        if (sameContent == getViewManager().getCurrentViewN()) {
+                            logger.debug("[ServiceProxy] successful speculative case");
+                            response = extractor.extractResponse(replies, sameContent, pos);
+                            reqId = -1;
+                            this.sm.release(); // resumes the thread that is executing the "invoke" method
+                            canReceiveLock.unlock();
+                            return;
+                        }
+                    }else{
+                        // Compare the reply just received, to the others
+                        for (int i = 0; i < replies.length; i++) {
+
+                            if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
+                                    && (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
+                                sameContent++;
+                                if (sameContent >= replyQuorum) {
+                                    response = extractor.extractResponse(replies, sameContent, pos);
+                                    reqId = -1;
+                                    this.sm.release(); // resumes the thread that is executing the "invoke" method
+                                    canReceiveLock.unlock();
+                                    return;
+                                }
+                            }
+                        }
+                    }
 				}
 				
 				if (response == null) {
@@ -466,7 +508,10 @@ public class ServiceProxy extends TOMSender {
          */
 	protected int getReplyQuorum() {
 		if (getViewManager().getStaticConf().isBFT()) {
-			return (int) Math.ceil((getViewManager().getCurrentViewN()
+		    if(speculative)
+		        return getViewManager().getCurrentViewN();
+			else
+			    return (int) Math.ceil((getViewManager().getCurrentViewN()
 					+ getViewManager().getCurrentViewF()) / 2) + 1;
 		} else {
 			return (int) Math.ceil((getViewManager().getCurrentViewN()) / 2) + 1;

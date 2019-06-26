@@ -443,7 +443,7 @@ public class CrashReplica extends ServiceReplica {
         }
 
 
-        if(totalRequests > 50) {
+        if(totalRequests > 1) {
             logger.debug("Total requests " + totalRequests);
             logger.debug("Crashing");
             cs.shutdown();

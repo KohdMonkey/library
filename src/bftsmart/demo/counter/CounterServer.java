@@ -47,7 +47,7 @@ public final class CounterServer extends DefaultSingleRecoverable  {
         //for now, only last node is byzantine
         if(id == 3) {
             System.out.println("Starting byzantine replica");
-            new RandomDelayReplica(id, this, this);
+            new CrashReplica(id, this, this);
         }else{
             new ServiceReplica(id, this, this);
         }
