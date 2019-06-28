@@ -242,8 +242,10 @@ public class ServiceProxy extends TOMSender {
 		replyQuorum = getReplyQuorum();
 
 		// Send the request to the replicas, and get its ID
-		reqId = generateRequestId(reqType);
-		operationId = generateOperationId();
+
+		//generate new IDs only for speculative requests
+        reqId = generateRequestId(reqType);
+        operationId = generateOperationId();
 		requestType = reqType;
 
 		replyServer = -1;
@@ -259,12 +261,13 @@ public class ServiceProxy extends TOMSender {
 					getViewManager().getCurrentViewProcesses().length);
 
 			TOMMessage sm = new TOMMessage(getProcessId(),getSession(), reqId, operationId, request,
-					getViewManager().getCurrentViewId(), requestType);
+					getViewManager().getCurrentViewId(), requestType, speculative);
 			sm.setReplyServer(replyServer);
 
 			TOMulticast(sm);
 		}else{
-			TOMulticast(request, reqId, operationId, reqType);
+		    logger.debug("[ServiceProxy] speculative: " + speculative);
+			TOMulticast(request, reqId, operationId, reqType, speculative);
 		}
 
 		logger.debug("Sending request (" + reqType + ") with reqId=" + reqId);

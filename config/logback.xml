@@ -38,6 +38,10 @@
    <logger name="bftsmart.consensus.roles.Acceptor" level="TRACE"></logger>
    <logger name="bftsmart.tom.ServiceReplica" level="TRACE"></logger>
    <logger name="bftsmart.tom.ServiceProxy" level="DEBUG"></logger>
+   <logger name="bftsmart.tom.core.TOMLayer" level="DEBUG"></logger>
+   <logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemServerSide" level="DEBUG"></logger>
+   <logger name="bftsmart.clientsmanagement.ClientsManager" level="DEBUG"></logger>
+   <logger name="bftsmart.clientsmanagement.ClientData" level="DEBUG"></logger>
    <logger name="bftsmart.byzantine.RandomDelayAcceptor" level="TRACE"></logger>
    <logger name="bftsmart.byzantine.replica.CrashReplica" level="TRACE"></logger>
    <logger name="bftsmart.byzantine.replica.RandomDelayReplica" level="TRACE"></logger>

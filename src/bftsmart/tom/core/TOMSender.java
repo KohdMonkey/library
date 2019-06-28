@@ -120,10 +120,10 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 	}
 
 
-	public void TOMulticast(byte[] m, int reqId, int operationId, TOMMessageType reqType) {
+	public void TOMulticast(byte[] m, int reqId, int operationId, TOMMessageType reqType, boolean speculative) {
 		cs.send(useSignatures, viewController.getCurrentViewProcesses(),
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
-						reqType));
+						reqType, speculative));
 	}
 
 
@@ -132,7 +132,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 			type = TOMMessageType.ASK_STATUS;
 		}
 		cs.send(useSignatures, targets,
-				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(), type));
+				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(), type, false));
 	}
 
 	public int getSession(){

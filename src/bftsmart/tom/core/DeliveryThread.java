@@ -318,7 +318,7 @@ public final class DeliveryThread extends Thread {
 		MessageContext msgCtx = new MessageContext(request.getSender(), request.getViewID(), request.getReqType(),
 				request.getSession(), request.getSequence(), request.getOperationId(), request.getReplyServer(),
 				request.serializedMessageSignature, System.currentTimeMillis(), 0, 0, regency, -1, -1, null, null,
-				false); // Since the request is unordered,
+				false, request.isSpeculative()); // Since the request is unordered,
 						// there is no consensus info to pass
 
 		msgCtx.readOnly = true;
@@ -339,7 +339,7 @@ public final class DeliveryThread extends Thread {
 				tomLayer.getCommunication().send(new int[] { dests[i].getSender() },
 						new TOMMessage(controller.getStaticConf().getProcessId(), dests[i].getSession(),
 								dests[i].getSequence(), dests[i].getOperationId(), response,
-								controller.getCurrentViewId(), TOMMessageType.RECONFIG));
+								controller.getCurrentViewId(), TOMMessageType.RECONFIG, false));
 			}
 
 			tomLayer.getCommunication().updateServersConnections();

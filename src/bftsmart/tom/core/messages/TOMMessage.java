@@ -43,6 +43,7 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 	// There is a sequence number for ordered and anothre for unordered messages
 	private int sequence;
 	private int operationId; // Sequence number defined by the client
+    private boolean speculative;
 
 	private byte[] content = null; // Content of the message
 
@@ -85,6 +86,8 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 	
 	private int replyServer = -1;
 
+
+
 	public TOMMessage() {
 	}
 
@@ -113,7 +116,9 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 	 * @param view The view in which the message was sent
 	 * @param type Ordered or Unordered request
 	 */
-	public TOMMessage(int sender, int session, int sequence, int operationId, byte[] content, int view, TOMMessageType type) {
+	public TOMMessage(int sender, int session, int sequence, int operationId, byte[] content, int view,
+                      TOMMessageType type, boolean speculative) {
+
 		super(sender);
 		this.session = session;
 		this.sequence = sequence;
@@ -122,6 +127,7 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 		buildId();
 		this.content = content;
 		this.type = type;
+		this.speculative = speculative;
 	}
 
 
@@ -168,6 +174,8 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 	public int getViewID() {
 		return viewID;
 	}
+
+	public boolean isSpeculative() { return speculative; }
 
 	public TOMMessageType getReqType() {
 		return type;
@@ -233,7 +241,8 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 		out.writeInt(sequence);
 		out.writeInt(operationId);
 		out.writeInt(replyServer);
-		
+		out.writeBoolean(speculative);
+
 		if (content == null) {
 			out.writeInt(-1);
 		} else {
@@ -250,6 +259,7 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
 		sequence = in.readInt();
 		operationId = in.readInt();
 		replyServer = in.readInt();
+		speculative = in.readBoolean();
 		
 		int toRead = in.readInt();
 		if (toRead != -1) {
@@ -346,7 +356,7 @@ public class TOMMessage extends SystemMessage implements Externalizable, Compara
              
                           
                     TOMMessage clone = new TOMMessage(sender, session, sequence,
-                            operationId, content, viewID, type);
+                            operationId, content, viewID, type, speculative);
 
                     clone.setReplyServer(replyServer);
                     

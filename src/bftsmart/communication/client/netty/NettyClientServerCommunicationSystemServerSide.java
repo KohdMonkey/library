@@ -233,6 +233,7 @@ public class NettyClientServerCommunicationSystemServerSide extends SimpleChanne
 			return;
 		}
 
+		logger.debug("[CommSystem] message isspeculative: " + sm.isSpeculative());
 		// delivers message to TOMLayer
 		if (requestReceiver == null)
 			logger.warn("Request receiver is still null!");

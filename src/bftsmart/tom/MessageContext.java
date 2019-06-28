@@ -42,7 +42,9 @@ public class MessageContext implements Serializable {
     private final int operationId;
     private final int replyServer;
     private final  byte[] signature;
-    
+
+    private final boolean speculative;
+
     // Consensus info
     private final long timestamp;
     private final int regency;
@@ -84,7 +86,7 @@ public class MessageContext implements Serializable {
     public MessageContext(int sender, int viewID, TOMMessageType type,
             int session, int sequence, int operationId, int replyServer, byte[] signature,
             long timestamp, int numOfNonces, long seed, int regency, int leader, int consensusId,
-            Set<ConsensusMessage> proof, TOMMessage firstInBatch, boolean noOp) {
+            Set<ConsensusMessage> proof, TOMMessage firstInBatch, boolean noOp, boolean speculative) {
         
         this.nonces = null;
                
@@ -107,6 +109,8 @@ public class MessageContext implements Serializable {
         this.proof = proof;
         this.firstInBatch = firstInBatch;
         this.noOp = noOp;
+
+        this.speculative = speculative;
     }
 
     /**
@@ -258,6 +262,7 @@ public class MessageContext implements Serializable {
     public TOMMessage getFirstInBatch() {
         return firstInBatch;
     }
+
     
     /**
      * @deprecated 
@@ -293,12 +298,15 @@ public class MessageContext implements Serializable {
      */
     public TOMMessage recreateTOMMessage(byte[] content) {
 
-        TOMMessage ret = new TOMMessage(sender, session, sequence, operationId, content, viewID, type);
+        TOMMessage ret = new TOMMessage(sender, session, sequence, operationId, content, viewID, type, speculative);
         ret.setReplyServer(replyServer);
         ret.serializedMessageSignature = signature;
         ret.serializedMessage = TOMMessage.messageToBytes(ret);
         
         return ret;
     }
+
+
+    public boolean isSpeculative() { return speculative; }
 
 }

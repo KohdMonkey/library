@@ -301,7 +301,7 @@ public class CrashReplica extends ServiceReplica {
                                     request.getReqType(), request.getSession(), request.getSequence(), request.getOperationId(),
                                     request.getReplyServer(), request.serializedMessageSignature, firstRequest.timestamp,
                                     request.numOfNonces, request.seed, regencies[consensusCount], leaders[consensusCount],
-                                    consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, false);
+                                    consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, false, request.isSpeculative());
                             if (requestCount + 1 == requestsFromConsensus.length) {
 
                                 msgCtx.setLastInBatch();
@@ -352,7 +352,8 @@ public class CrashReplica extends ServiceReplica {
                     // him (but only if it came from consensus an not state transfer)
 
                     tomLayer.getCommunication().send(new int[]{request.getSender()}, new TOMMessage(SVController.getStaticConf().getProcessId(),
-                            request.getSession(), request.getSequence(), request.getOperationId(), TOMUtil.getBytes(SVController.getCurrentView()), SVController.getCurrentViewId(), request.getReqType()));
+                            request.getSession(), request.getSequence(), request.getOperationId(), TOMUtil.getBytes(SVController.getCurrentView()),
+                            SVController.getCurrentViewId(), request.getReqType(), request.isSpeculative()));
                 }
                 requestCount++;
                 totalRequests++;
@@ -386,7 +387,7 @@ public class CrashReplica extends ServiceReplica {
                                 m.getReqType(), m.getSession(), m.getSequence(), m.getOperationId(),
                                 m.getReplyServer(), m.serializedMessageSignature, firstRequest.timestamp,
                                 m.numOfNonces, m.seed, regencies[consensusCount], leaders[consensusCount],
-                                consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, true);
+                                consId[consensusCount], cDecs[consensusCount].getConsMessages(), firstRequest, true, m.isSpeculative());
                         msgCtx[line].setLastInBatch();
 
                         line++;

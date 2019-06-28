@@ -235,6 +235,7 @@ public class AsynchServiceProxy extends ServiceProxy {
             requestsContext.put(requestContext.getOperationId(), requestContext);
             requestsReplies.put(requestContext.getOperationId(), new TOMMessage[super.getViewManager().getCurrentViewN()]);
 
+            logger.debug("[AsyncServiceProxy] speculative requests not supported");
             sendMessageToTargets(request, requestContext.getReqId(), requestContext.getOperationId(), targets, reqType);
 
         } finally {

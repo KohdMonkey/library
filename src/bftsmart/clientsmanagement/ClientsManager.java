@@ -307,6 +307,7 @@ public class ClientsManager {
 
         request.receptionTime = receptionTime;
         request.receptionTimestamp = receptionTimestamp;
+        logger.debug("[ClientsManager] speculative: " + request.isSpeculative());
         
         /******* BEGIN CLIENTDATA CRITICAL SECTION ******/
         //Logger.println("(ClientsManager.requestReceived) lock for client "+clientData.getClientId()+" acquired");
