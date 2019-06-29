@@ -44,6 +44,9 @@ public class ClientData {
     private int lastMessageDelivered = -1;
 
     private RequestList pendingRequests = new RequestList();
+    private RequestList pendingSpeculativeRequests = new RequestList();
+
+
     //anb: new code to deal with client requests that arrive after their execution
     private RequestList orderedRequests = new RequestList(5);
 
@@ -83,6 +86,10 @@ public class ClientData {
 
     public RequestList getPendingRequests() {
         return pendingRequests;
+    }
+
+    public RequestList getPendingSpeculativeRequests() {
+        return pendingSpeculativeRequests;
     }
 
     public RequestList getOrderedRequests() {
@@ -130,6 +137,13 @@ public class ClientData {
             orderedRequests.addLast(request);
             return true;
         }
+        //code for speculative request
+        if(pendingSpeculativeRequests.remove(request)) {
+            //anb: new code to deal with client requests that arrive after their execution
+            orderedRequests.addLast(request);
+            return true;
+        }
+
         return false;
     }
 
@@ -145,6 +159,16 @@ public class ClientData {
 			it.remove();
 		}
 	}
+
+	//speculative request
+	if(!result) {
+        for(Iterator<TOMMessage> it = pendingSpeculativeRequests.iterator();it.hasNext();){
+            TOMMessage msg = it.next();
+            if(msg.getSequence()<request.getSequence()){
+                it.remove();
+            }
+        }
+    }
 
     	return result;
     }

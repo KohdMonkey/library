@@ -121,34 +121,37 @@ public class ClientsManager {
         logger.debug("Number of active clients: {}", clientsEntryList.size());
         
         for (int i = 0; true; i++) {
-                        
             Iterator<Entry<Integer, ClientData>> it = clientsEntryList.iterator();
             int noMoreMessages = 0;
-            
-            logger.debug("Fetching requests with internal index {}", i);
-            
+            boolean speculative = false;
+
+            logger.debug("Fetching speculative requests with internal index {}", i);
+
             while (it.hasNext()
                     && allReq.size() < controller.getStaticConf().getMaxBatchSize()
                     && noMoreMessages < clientsEntryList.size()) {
 
                 ClientData clientData = it.next().getValue();
-                RequestList clientPendingRequests = clientData.getPendingRequests();
+                RequestList clientPendingSpeculativeRequests = clientData.getPendingSpeculativeRequests();
 
                 clientData.clientLock.lock();
 
-                logger.debug("Number of pending requests for client {}: {}.", clientData.getClientId(), clientPendingRequests.size());
+                logger.debug("Number of pending speculative requests for client {}: {}.", clientData.getClientId(), clientPendingSpeculativeRequests.size());
 
                 /******* BEGIN CLIENTDATA CRITICAL SECTION ******/
-                TOMMessage request = (clientPendingRequests.size() > i) ? clientPendingRequests.get(i) : null;
+                TOMMessage request = (clientPendingSpeculativeRequests.size() > i) ? clientPendingSpeculativeRequests.get(i) : null;
 
                 /******* END CLIENTDATA CRITICAL SECTION ******/
                 clientData.clientLock.unlock();
 
                 if (request != null) {
+                    if(!speculative)
+                        speculative = true;
+
                     if(!request.alreadyProposed) {
-                        
+
                         logger.debug("Selected request with sequence number {} from client {}", request.getSequence(), request.getSender());
-                        
+
                         //this client have pending message
                         request.alreadyProposed = true;
                         allReq.addLast(request);
@@ -158,12 +161,55 @@ public class ClientsManager {
                     noMoreMessages++;
                 }
             }
-            
-            if(allReq.size() == controller.getStaticConf().getMaxBatchSize() ||
-                    noMoreMessages == clientsEntryList.size()) {
-                
+
+            //if there were no speculative requests, retrieve regular requests
+            if(!speculative) {
+                it = clientsEntryList.iterator();
+                noMoreMessages = 0;
+                logger.debug("[ClientsManager-> getPendingRequests]Fetching regular requests with internal index {}", i);
+
+                while (it.hasNext()
+                        && allReq.size() < controller.getStaticConf().getMaxBatchSize()
+                        && noMoreMessages < clientsEntryList.size()) {
+
+                    ClientData clientData = it.next().getValue();
+                    RequestList clientPendingRequests = clientData.getPendingRequests();
+
+                    clientData.clientLock.lock();
+
+                    logger.debug("Number of pending requests for client {}: {}.", clientData.getClientId(), clientPendingRequests.size());
+
+                    /******* BEGIN CLIENTDATA CRITICAL SECTION ******/
+                    TOMMessage request = (clientPendingRequests.size() > i) ? clientPendingRequests.get(i) : null;
+
+                    /******* END CLIENTDATA CRITICAL SECTION ******/
+                    clientData.clientLock.unlock();
+
+                    if (request != null) {
+                        if(!request.alreadyProposed) {
+
+                            logger.debug("Selected request with sequence number {} from client {}", request.getSequence(), request.getSender());
+
+                            //this client have pending message
+                            request.alreadyProposed = true;
+                            allReq.addLast(request);
+                        }
+                    } else {
+                        //this client don't have more pending requests
+                        noMoreMessages++;
+                    }
+                }
+
+                if(allReq.size() == controller.getStaticConf().getMaxBatchSize() ||
+                        noMoreMessages == clientsEntryList.size()) {
+
+                    break;
+                }
+            }else {
+                logger.debug("[ClientsManager] created list of speculative requests");
                 break;
             }
+
         }
         
         /******* END CLIENTS CRITICAL SECTION ******/
@@ -187,9 +233,10 @@ public class ClientsManager {
 
         while (it.hasNext() && !havePending) {
             ClientData clientData = it.next().getValue();
-            
+
+            //check for speculative requests first
             clientData.clientLock.lock();
-            RequestList reqs = clientData.getPendingRequests();
+            RequestList reqs = clientData.getPendingSpeculativeRequests();
             if (!reqs.isEmpty()) {
                 for(TOMMessage msg:reqs) {
                     if(!msg.alreadyProposed) {
@@ -198,6 +245,21 @@ public class ClientsManager {
                     }
                 }
             }
+
+            //if no pending speculative requests, check regular requests
+            if(!havePending) {
+                logger.debug("[ClientsManager->havePendingRequests()] no speculative requests, checking regular");
+                reqs = clientData.getPendingRequests();
+                if (!reqs.isEmpty()) {
+                    for(TOMMessage msg:reqs) {
+                        if(!msg.alreadyProposed) {
+                            havePending = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
             clientData.clientLock.unlock();
         }
 
@@ -211,7 +273,11 @@ public class ClientsManager {
      * @return Number of pending requests
      */
     public int countPendingRequests() {
+        //[Tuan] count the number of pending speculative and nonspeculative requests,
+        //       and return the greater of the two numbers
         int count = 0;
+        int countSpeculative = 0;
+
 
         clientsLock.lock();
         /******* BEGIN CLIENTS CRITICAL SECTION ******/        
@@ -222,7 +288,16 @@ public class ClientsManager {
             ClientData clientData = it.next().getValue();
             
             clientData.clientLock.lock();
-            RequestList reqs = clientData.getPendingRequests();
+            RequestList reqs = clientData.getPendingSpeculativeRequests();
+            if (!reqs.isEmpty()) {
+                for(TOMMessage msg:reqs) {
+                    if(!msg.alreadyProposed) {
+                        countSpeculative++;
+                    }
+                }
+            }
+
+            reqs = clientData.getPendingRequests();
             if (!reqs.isEmpty()) {
                 for(TOMMessage msg:reqs) {
                     if(!msg.alreadyProposed) {
@@ -230,14 +305,17 @@ public class ClientsManager {
                     }
                 }
             }
+
             clientData.clientLock.unlock();
         }
 
         /******* END CLIENTS CRITICAL SECTION ******/
         clientsLock.unlock();
-        return count;
+
+        return countSpeculative > count? countSpeculative : count;
     }
 
+    //[isPending() and getPending() are not used]
     /**
      * Verifies if some reqId is pending.
      *
@@ -372,8 +450,15 @@ public class ClientsManager {
                 //I don't have the message but it is valid, I will
                 //insert it in the pending requests of this client
 
+
+                //[ADD Code Here for Speculative queue]
                 request.recvFromClient = fromClient;
-                clientData.getPendingRequests().add(request); 
+                if(request.isSpeculative()) {
+                    logger.debug("[ClientsManager->requestReceived] adding request to speculative list");
+                    clientData.getPendingSpeculativeRequests().add(request);
+                }else{
+                    clientData.getPendingRequests().add(request);
+                }
                 clientData.setLastMessageReceived(request.getSequence());
                 clientData.setLastMessageReceivedTime(request.receptionTime);
 

@@ -31,14 +31,22 @@ public class RequestList extends LinkedList<TOMMessage> {
 	private static final long serialVersionUID = -3639222602426147629L;
 	
 	private int maxSize = Integer.MAX_VALUE;
+	private boolean speculative;
 
     public RequestList() {
+        this.speculative = false;
     }
 
     public RequestList(int maxSize) {
         super();
         this.maxSize = maxSize;
     }
+
+    public void setSpeculative() {
+        speculative = true;
+    }
+
+    public boolean isSpeculative() { return speculative; }
 
     @Override
     public void addLast(TOMMessage msg) {
