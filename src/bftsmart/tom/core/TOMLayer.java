@@ -372,6 +372,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     public byte[] createBatch(Decision dec) {
         // Retrieve a set of pending requests from the clients manager
         RequestList pendingRequests = clientsManager.getPendingRequests();
+        dec.setSpeculative(pendingRequests.isSpeculative());
         
         logger.debug("Number of pending requets to propose in consensus {}: {}", dec.getConsensusId(), pendingRequests.size());
 

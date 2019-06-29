@@ -53,13 +53,14 @@ public class Proposer {
      */
     public void startConsensus(int cid, byte[] value, boolean speculative) {
         ConsensusMessage message;
-//        if(speculative) {
-//            //if it is a speculative request, create a write message
-//            message = factory.createExecute(cid, 0, value);
-//        }else {
-//            message = factory.createPropose(cid, 0, value);
-//        }
-        message = factory.createPropose(cid, 0, value);
+        if(speculative) {
+            System.out.println("[Proposer] creating execute message");
+            //if it is a speculative request, create a write message
+            message = factory.createExecute(cid, 0, value);
+        }else {
+            message = factory.createPropose(cid, 0, value);
+        }
+//        message = factory.createPropose(cid, 0, value);
         communication.send(this.controller.getCurrentViewAcceptors(),message);
 
         //******* EDUARDO BEGIN **************//

@@ -145,8 +145,11 @@ public class ClientsManager {
                 clientData.clientLock.unlock();
 
                 if (request != null) {
-                    if(!speculative)
+                    if(!speculative){
+                        allReq.setSpeculative();
                         speculative = true;
+                    }
+
 
                     if(!request.alreadyProposed) {
 
