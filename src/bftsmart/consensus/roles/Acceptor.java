@@ -161,6 +161,11 @@ public class Acceptor {
 		case MessageFactory.ACCEPT: {
 			acceptReceived(epoch, msg);
 		}
+
+		case MessageFactory.EXECUTE: {
+		    logger.debug("Execute Received");
+		}
+
 		}
 		consensus.lock.unlock();
 	}
@@ -426,6 +431,12 @@ public class Acceptor {
 			decide(epoch);
 		}
 	}
+
+	private void execute(Epoch epoch, ConsensusMessage msg) {
+
+    }
+
+
 
 	/**
 	 * This is the method invoked when a value is decided by this process

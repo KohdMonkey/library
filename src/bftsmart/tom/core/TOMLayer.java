@@ -369,7 +369,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
      * @param dec Object that will eventually hold the decided value
      * @return A value to be proposed to the acceptors
      */
-    public byte[] createPropose(Decision dec) {
+    public byte[] createBatch(Decision dec) {
         // Retrieve a set of pending requests from the clients manager
         RequestList pendingRequests = clientsManager.getPendingRequests();
         
@@ -459,7 +459,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
 
                     logger.debug("Only one replica, bypassing consensus.");
                     
-                    byte[] value = createPropose(dec);
+                    byte[] value = createBatch(dec);
 
                     Consensus consensus = execManager.getConsensus(dec.getConsensusId());
                     Epoch epoch = consensus.getEpoch(0, controller);
@@ -475,7 +475,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     continue;
 
                 }
-                execManager.getProposer().startConsensus(execId, createPropose(dec));
+                logger.debug("[TOMLayer before creating batch]");
+                byte[] batch = createBatch(dec);
+
+                execManager.getProposer().startConsensus(execId, batch, dec.isSpeculative());
                 //code goes here
             }
         }

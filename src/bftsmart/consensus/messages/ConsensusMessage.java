@@ -208,6 +208,8 @@ public class ConsensusMessage extends SystemMessage {
             return "ACCEPT";
         else if (paxosType==MessageFactory.WRITE)
             return "WRITE";
+        else if (paxosType==MessageFactory.EXECUTE)
+            return "EXECUTE";
         else
             return "";
     }

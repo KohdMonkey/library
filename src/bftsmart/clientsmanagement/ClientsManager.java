@@ -464,6 +464,7 @@ public class ClientsManager {
 
                 //create a timer for this message
                 if (timer != null) {
+                    logger.debug("[ClientsManager] watching request: " + request.getId());
                     timer.watch(request);
                 }
 

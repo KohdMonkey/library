@@ -39,6 +39,9 @@ public class Decision {
     public TOMMessage firstMessageProposed = null;
     public int batchSize = 0;
 
+    //for speculative
+    public boolean speculative;
+
     /**
      * Creates a new instance of Decision
      * @param cid The ID for the respective consensus
@@ -63,6 +66,8 @@ public class Decision {
         this.leader = leader;
     }
 
+    public void setSpeculative(boolean speculative) { this.speculative = speculative; }
+
     /**
      * Returns regency in which the value was decided
      * @return Regency in which the value was decided
@@ -78,7 +83,9 @@ public class Decision {
     public int getLeader() {
         return leader;
     }
-    
+
+    public boolean isSpeculative() { return speculative; }
+
     /**
      * Set epoch in which the value was decided
      * @param epoch The epoch in which the value was decided

@@ -16,6 +16,7 @@ limitations under the License.
 package bftsmart.consensus.roles;
 
 import bftsmart.communication.ServerCommunicationSystem;
+import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.reconfiguration.ServerViewController;
 
@@ -50,10 +51,20 @@ public class Proposer {
      * @param cid ID for the consensus instance to be started
      * @param value Value to be proposed
      */
-    public void startConsensus(int cid, byte[] value) {
+    public void startConsensus(int cid, byte[] value, boolean speculative) {
+        ConsensusMessage message;
+//        if(speculative) {
+//            //if it is a speculative request, create a write message
+//            message = factory.createExecute(cid, 0, value);
+//        }else {
+//            message = factory.createPropose(cid, 0, value);
+//        }
+        message = factory.createPropose(cid, 0, value);
+        communication.send(this.controller.getCurrentViewAcceptors(),message);
+
         //******* EDUARDO BEGIN **************//
-        communication.send(this.controller.getCurrentViewAcceptors(),
-                factory.createPropose(cid, 0, value));
+//        communication.send(this.controller.getCurrentViewAcceptors(),
+//                factory.createPropose(cid, 0, value));
         //******* EDUARDO END **************//
     }
 }
