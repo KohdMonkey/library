@@ -255,7 +255,7 @@ public final class ExecutionManager {
                 if (isRetrievingState || 
                         msg.getNumber() > (lastConsId + 1) || 
                         (inExec != -1 && inExec < msg.getNumber()) || 
-                        (inExec == -1 && msg.getType() != MessageFactory.PROPOSE)) { //not propose message for the next consensus
+                        (inExec == -1 && (msg.getType() == MessageFactory.WRITE || msg.getType() == MessageFactory.ACCEPT))) { //not propose message for the next consensus
                     logger.debug("Message for consensus " + 
                             msg.getNumber() + " is out of context, adding it to out of context set");
                     

@@ -146,7 +146,7 @@ public class Acceptor {
 	 */
 	public void processMessage(ConsensusMessage msg) {
 		Consensus consensus = executionManager.getConsensus(msg.getNumber());
-
+        logger.debug("[Acceptor] received consensus message " + msg.getType());
 		consensus.lock.lock();
 		Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);
 		switch (msg.getType()) {
@@ -164,6 +164,7 @@ public class Acceptor {
 
 		case MessageFactory.EXECUTE: {
 		    logger.debug("Execute Received");
+		    execute(epoch, msg);
 		}
 
 		}
@@ -433,7 +434,12 @@ public class Acceptor {
 	}
 
 	private void execute(Epoch epoch, ConsensusMessage msg) {
-
+        epoch.propValue = msg.getValue();
+        epoch.propValueHash = tomLayer.computeHash(msg.getValue());
+        epoch.getConsensus().addWritten(msg.getValue());
+        epoch.deserializedPropValue = tomLayer.checkProposedValue(msg.getValue(), true);
+        epoch.getConsensus().getDecision().firstMessageProposed = epoch.deserializedPropValue[0];
+        decide(epoch);
     }
 
 

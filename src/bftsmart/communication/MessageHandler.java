@@ -51,7 +51,7 @@ public class MessageHandler {
 	@SuppressWarnings("unchecked")
 	protected void processData(SystemMessage sm) {
 		if (sm instanceof ConsensusMessage) {
-
+            logger.debug("[MessageHandler] received consensus message: " + ((ConsensusMessage) sm).getType());
 			int myId = tomLayer.controller.getStaticConf().getProcessId();
 
 			ConsensusMessage consMsg = (ConsensusMessage) sm;

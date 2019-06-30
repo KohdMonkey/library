@@ -114,7 +114,7 @@ public class ServerCommunicationSystem extends Thread {
                 SystemMessage sm = inQueue.poll(MESSAGE_WAIT_TIME, TimeUnit.MILLISECONDS);
 
                 if (sm != null) {
-                    logger.debug("<-- receiving, msg:" + sm);
+//                    logger.debug("<-- receiving, msg:" + sm);
                     messageHandler.processData(sm);
                     count++;
                 } else {                
@@ -139,8 +139,10 @@ public class ServerCommunicationSystem extends Thread {
      */
     public void send(int[] targets, SystemMessage sm) {
         if (sm instanceof TOMMessage) {
+            logger.debug("[ServerCommSystem] Sending TOMMessage");
             clientsConn.send(targets, (TOMMessage) sm, false);
         } else {
+            logger.debug("[ServerCommSystem] not TOMMessage");
         	logger.debug("--> sending message from: {} -> {}" + sm.getSender(), targets);
             serversConn.send(targets, sm, true);
         }

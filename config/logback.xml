@@ -39,6 +39,8 @@
    <logger name="bftsmart.tom.ServiceReplica" level="TRACE"></logger>
    <logger name="bftsmart.tom.ServiceProxy" level="DEBUG"></logger>
    <logger name="bftsmart.tom.core.TOMLayer" level="DEBUG"></logger>
+   <logger name="bftsmart.tom.core.ExecutionManager" level="DEBUG"></logger>
+   <logger name="bftsmart.communication.MessageHandler" level="DEBUG"></logger>
    <logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemServerSide" level="DEBUG"></logger>
    <logger name="bftsmart.clientsmanagement.ClientsManager" level="DEBUG"></logger>
    <logger name="bftsmart.clientsmanagement.ClientData" level="DEBUG"></logger>
