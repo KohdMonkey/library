@@ -147,6 +147,8 @@ public class Acceptor {
 	public void processMessage(ConsensusMessage msg) {
 		Consensus consensus = executionManager.getConsensus(msg.getNumber());
         logger.debug("[Acceptor] received consensus message " + msg.getType());
+        logger.debug("[Acceptor] message number " + msg.getNumber());
+		logger.debug("[Acceptor] message value " + msg.getValue().toString());
 		consensus.lock.lock();
 		Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);
 		switch (msg.getType()) {
@@ -160,10 +162,10 @@ public class Acceptor {
 			break;
 		case MessageFactory.ACCEPT: {
 			acceptReceived(epoch, msg);
+			break;
 		}
 
 		case MessageFactory.EXECUTE: {
-		    logger.debug("Execute Received");
 		    execute(epoch, msg);
 		}
 
