@@ -66,6 +66,7 @@ public class ServiceProxy extends TOMSender {
 	private HashResponseController hashResponseController;
 	private int invokeUnorderedHashedTimeout = 10;
 
+	private boolean testSpeculative;
 	private boolean speculative = false;
 //    byte[] lastRequest = {(byte)0xCA, (byte)0xFE, (byte)0xBA, (byte)0xBE};
 
@@ -74,8 +75,9 @@ public class ServiceProxy extends TOMSender {
 	 *
 	 * @see bellow
 	 */
-	public ServiceProxy(int processId) {
+	public ServiceProxy(int processId, boolean speculative) {
 		this(processId, null, null, null, null);
+		testSpeculative = speculative;
 	}
 
 	/**
@@ -184,9 +186,9 @@ public class ServiceProxy extends TOMSender {
 	public byte[] invokeOrdered(byte[] request) {
 	    //if this is the first time executing this request, execute speculatively
         logger.debug("new request: " + Arrays.toString(request));
-	    if(!speculative) {
-            speculative = true;
-        }
+
+		if(testSpeculative && !speculative)
+			speculative = true;
 
 		return invoke(request, TOMMessageType.ORDERED_REQUEST);
 	}

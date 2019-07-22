@@ -184,7 +184,7 @@ public class ThroughputLatencyClient {
             this.interval = interval;
             this.readOnly = readOnly;
             this.verbose = verbose;
-            this.proxy = new ServiceProxy(id);
+            this.proxy = new ServiceProxy(id, false);
             this.request = new byte[this.requestSize];
             
             Random rand = new Random(System.nanoTime() + this.id);

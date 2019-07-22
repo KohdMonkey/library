@@ -19,7 +19,7 @@ public class MapClient<K, V> implements Map<K, V>{
 	ServiceProxy serviceProxy;
 	
 	public MapClient(int clientId) {
-		serviceProxy = new ServiceProxy(clientId);
+		serviceProxy = new ServiceProxy(clientId, false);
 	}
 	
 	@SuppressWarnings("unchecked")

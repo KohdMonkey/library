@@ -127,6 +127,7 @@ public class ClientsManager {
 
             logger.debug("Fetching speculative requests with internal index {}", i);
 
+            //add flag here to switch to regular after 3 speculative batches
             while (it.hasNext()
                     && allReq.size() < controller.getStaticConf().getMaxBatchSize()
                     && noMoreMessages < clientsEntryList.size()) {
