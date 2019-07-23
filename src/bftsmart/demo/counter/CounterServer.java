@@ -45,13 +45,13 @@ public final class CounterServer extends DefaultSingleRecoverable  {
     
     public CounterServer(int id) {
         //for now, only last node is byzantine
-//        new ServiceReplica(id, this, this);
-        if(id == 3) {
-            System.out.println("Starting byzantine replica");
-            new CrashReplica(id, this, this);
-        }else{
-            new ServiceReplica(id, this, this);
-        }
+        new ServiceReplica(id, this, this);
+//        if(id == 3) {
+//            System.out.println("Starting byzantine replica");
+//            new CrashReplica(id, this, this);
+//        }else{
+//            new ServiceReplica(id, this, this);
+//        }
     }
             
     @Override

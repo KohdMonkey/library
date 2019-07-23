@@ -35,6 +35,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import bftsmart.communication.SystemMessage;
+import bftsmart.consensus.messages.ConsensusMessage;
+import bftsmart.consensus.messages.MessageFactory;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.tom.ServiceReplica;
 import bftsmart.tom.util.TOMUtil;
@@ -55,6 +57,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManagerFactory;
 
+//import com.sun.xml.internal.ws.api.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +98,7 @@ public class ServersCommunicationLayer extends Thread {
     private List<PendingConnection> pendingConn = new LinkedList<PendingConnection>();
     private ServiceReplica replica;
     
-    
+    private int speculativeMessagesSeen = 0;
     /**
 	 * Tulio A. Ribeiro
 	 * SSL / TLS.
@@ -110,6 +113,7 @@ public class ServersCommunicationLayer extends Thread {
 	private SecretKey selfPwd;
 	private SSLServerSocket serverSocketSSLTLS;
 	private String ssltlsProtocolVersion;
+
 
     public ServersCommunicationLayer(ServerViewController controller,
             LinkedBlockingQueue<SystemMessage> inQueue, 
@@ -194,6 +198,7 @@ public class ServersCommunicationLayer extends Thread {
                 }
             }
         }
+
         
         start();
     }
@@ -270,20 +275,55 @@ public class ServersCommunicationLayer extends Thread {
         Integer[] targetsShuffled = Arrays.stream( targets ).boxed().toArray( Integer[]::new );
         Collections.shuffle(Arrays.asList(targetsShuffled), new Random(System.nanoTime())); 
 
-        for (int target : targetsShuffled) {
-			try {
-				if (target == me) {
-					sm.authenticated = true;
-					inQueue.put(sm);
-					logger.debug("Queueing (delivering) my own message, me:{}", target);
-				} else {
-					logger.debug("Sending message from:{} -> to:{}.", me,  target);
-					getConnection(target).send(data);
-				}
-			} catch (InterruptedException ex) {
-				logger.error("Interruption while inserting message into inqueue", ex);
-			}
-		}
+
+        //malicious leader, only trigger for consensus messages
+        boolean sent = false;
+        boolean faulty = true; //add as param to constructor later
+        if(faulty && me == 0 && sm instanceof ConsensusMessage) {
+            ConsensusMessage m = (ConsensusMessage)sm;
+            //only withhold speculative messages for now
+            if(m.getType() == MessageFactory.EXECUTE) {
+                if(speculativeMessagesSeen < 5) {
+                    speculativeMessagesSeen++;
+                }else{
+                    logger.debug("[ServerCommSystem] Leader withholding speculative message after {} messages", speculativeMessagesSeen);
+                    for (int target : targetsShuffled) {
+                        try {
+                            if (target == me) {
+                                sm.authenticated = true;
+                                inQueue.put(sm);
+                                logger.debug("Queueing (delivering) my own message, me:{}", target);
+                            } else if (target == 1) {
+                                logger.debug("[ServerCommSystem] dropping message to {}", target);
+                            }else{
+                                logger.debug("Sending message from:{} -> to:{}.", me, target);
+                                getConnection(target).send(data);
+                            }
+                        } catch (InterruptedException ex) {
+                            logger.error("Interruption while inserting message into inqueue", ex);
+                        }
+
+                    }
+                    sent = true;
+                }
+            }
+        }
+        if(!sent) {
+            for (int target : targetsShuffled) {
+                try {
+                    if (target == me) {
+                        sm.authenticated = true;
+                        inQueue.put(sm);
+                        logger.debug("Queueing (delivering) my own message, me:{}", target);
+                    } else {
+                        logger.debug("Sending message from:{} -> to:{}.", me, target);
+                        getConnection(target).send(data);
+                    }
+                } catch (InterruptedException ex) {
+                    logger.error("Interruption while inserting message into inqueue", ex);
+                }
+            }
+        }
     }
 
     public void shutdown() {

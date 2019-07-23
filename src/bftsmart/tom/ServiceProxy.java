@@ -58,7 +58,7 @@ public class ServiceProxy extends TOMSender {
 	private TOMMessage replies[] = null; // Replies from replicas are stored here
 	private int receivedReplies = 0; // Number of received replies
 	private TOMMessage response = null; // Reply delivered to the application
-	private int invokeTimeout = 5;
+	private int invokeTimeout = 1; //invoke timeout
 	private Comparator<byte[]> comparator;
 	private Extractor extractor;
 	private Random rand = new Random(System.currentTimeMillis());
@@ -274,7 +274,6 @@ public class ServiceProxy extends TOMSender {
 
 		logger.debug("Sending request (" + reqType + ") with reqId=" + reqId);
 		logger.debug("Expected number of matching replies: " + replyQuorum);
-
 		// This instruction blocks the thread, until a response is obtained.
 		// The thread will be unblocked when the method replyReceived is invoked
 		// by the client side communication system

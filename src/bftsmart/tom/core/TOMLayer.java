@@ -480,7 +480,6 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 byte[] batch = createBatch(dec);
 
                 execManager.getProposer().startConsensus(execId, batch, dec.isSpeculative());
-                //code goes here
             }
         }
         logger.info("TOMLayer stopped.");

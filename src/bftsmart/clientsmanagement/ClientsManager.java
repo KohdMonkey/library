@@ -359,7 +359,6 @@ public class ClientsManager {
      *
      * @param request the received request
      * @param fromClient the message was received from client or not?
-     * @param storeMessage the message should be stored or not? (read-only requests are not stored)
      * @param cs server com. system to be able to send replies to already processed requests
      *
      * @return true if the request is ok and is added to the pending messages
@@ -467,7 +466,8 @@ public class ClientsManager {
                 clientData.setLastMessageReceivedTime(request.receptionTime);
 
                 //create a timer for this message
-                if (timer != null) {
+                //Tuan - only watch non-speculative requests
+                if (!request.isSpeculative() && timer != null) {
                     logger.debug("[ClientsManager] watching request: " + request.getId());
                     timer.watch(request);
                 }

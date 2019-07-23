@@ -50,6 +50,8 @@ public class ServerCommunicationSystem extends Thread {
     private CommunicationSystemServerSide clientsConn;
     private ServerViewController controller;
 
+    private boolean faulty = false;
+
     /**
      * Creates a new instance of ServerCommunicationSystem
      */
@@ -67,6 +69,7 @@ public class ServerCommunicationSystem extends Thread {
         //******* EDUARDO BEGIN **************//
             clientsConn = CommunicationSystemServerSideFactory.getCommunicationSystemServerSide(controller);
         //******* EDUARDO END **************//
+
     }
 
     //******* EDUARDO BEGIN **************//
