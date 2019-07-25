@@ -278,7 +278,7 @@ public class ServersCommunicationLayer extends Thread {
 
         //malicious leader, only trigger for consensus messages
         boolean sent = false;
-        boolean faulty = true; //add as param to constructor later
+        boolean faulty = false; //add as param to constructor later
         if(faulty && me == 0 && sm instanceof ConsensusMessage) {
             ConsensusMessage m = (ConsensusMessage)sm;
             //only withhold speculative messages for now
