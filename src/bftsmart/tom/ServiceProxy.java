@@ -58,7 +58,7 @@ public class ServiceProxy extends TOMSender {
 	private TOMMessage replies[] = null; // Replies from replicas are stored here
 	private int receivedReplies = 0; // Number of received replies
 	private TOMMessage response = null; // Reply delivered to the application
-	private int invokeTimeout = 1; //invoke timeout
+	private int invokeTimeout = 2; //invoke timeout
 	private Comparator<byte[]> comparator;
 	private Extractor extractor;
 	private Random rand = new Random(System.currentTimeMillis());
@@ -246,8 +246,10 @@ public class ServiceProxy extends TOMSender {
 		// Send the request to the replicas, and get its ID
 
 		//generate new IDs only for speculative requests
-        reqId = generateRequestId(reqType);
-        operationId = generateOperationId();
+		if(!testSpeculative || speculative == true) {
+			reqId = generateRequestId(reqType);
+			operationId = generateOperationId();
+		}
 		requestType = reqType;
 
 		replyServer = -1;
@@ -437,40 +439,21 @@ public class ServiceProxy extends TOMSender {
 					}
 					replies[pos] = reply;
 
+					// Compare the reply just received, to the others
+					for (int i = 0; i < replies.length; i++) {
+						if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
+								&& (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
+							sameContent++;
+							if (sameContent >= replyQuorum) {
+								response = extractor.extractResponse(replies, sameContent, pos);
+								reqId = -1;
+								this.sm.release(); // resumes the thread that is executing the "invoke" method
+								canReceiveLock.unlock();
+								return;
+							}
+						}
+					}
 
-					//speculative
-                    if(speculative) {
-                        for (int i = 0; i < replies.length; i++) {
-                            if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
-                                    && (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
-                                sameContent++;
-                            }
-                        }
-                        if (sameContent == getViewManager().getCurrentViewN()) {
-                            logger.debug("[ServiceProxy] successful speculative case");
-                            response = extractor.extractResponse(replies, sameContent, pos);
-                            reqId = -1;
-                            this.sm.release(); // resumes the thread that is executing the "invoke" method
-                            canReceiveLock.unlock();
-                            return;
-                        }
-                    }else{
-                        // Compare the reply just received, to the others
-                        for (int i = 0; i < replies.length; i++) {
-
-                            if ((i != pos || getViewManager().getCurrentViewN() == 1) && replies[i] != null
-                                    && (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
-                                sameContent++;
-                                if (sameContent >= replyQuorum) {
-                                    response = extractor.extractResponse(replies, sameContent, pos);
-                                    reqId = -1;
-                                    this.sm.release(); // resumes the thread that is executing the "invoke" method
-                                    canReceiveLock.unlock();
-                                    return;
-                                }
-                            }
-                        }
-                    }
 				}
 				
 				if (response == null) {
@@ -512,11 +495,14 @@ public class ServiceProxy extends TOMSender {
          */
 	protected int getReplyQuorum() {
 		if (getViewManager().getStaticConf().isBFT()) {
-		    if(speculative)
-		        return getViewManager().getCurrentViewN();
-			else
-			    return (int) Math.ceil((getViewManager().getCurrentViewN()
-					+ getViewManager().getCurrentViewF()) / 2) + 1;
+		    if(speculative){
+				return (getViewManager().getCurrentViewF() * 3) + 1; //3f+1
+			}else {
+//				return (int) Math.ceil((getViewManager().getCurrentViewN()
+//						+ getViewManager().getCurrentViewF()) / 2) + 1;
+				return (int) Math.ceil(getViewManager().getCurrentViewF() * 2) + 1;
+			}
+
 		} else {
 			return (int) Math.ceil((getViewManager().getCurrentViewN()) / 2) + 1;
 		}

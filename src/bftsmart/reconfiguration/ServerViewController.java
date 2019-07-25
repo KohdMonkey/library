@@ -279,7 +279,8 @@ public class ServerViewController extends ViewController {
                 }
             }
 
-            this.quorumBFT = (int) Math.ceil((this.currentView.getN() + this.currentView.getF()) / 2);
+//            this.quorumBFT = (int) Math.ceil((this.currentView.getN() + this.currentView.getF()) / 2);
+            this.quorumBFT = (int) Math.ceil(this.currentView.getF() * 2);
             this.quorumCFT = (int) Math.ceil(this.currentView.getN() / 2);
         } else if (this.currentView != null && this.currentView.isMember(getStaticConf().getProcessId())) {
             //TODO: Left the system in newView -> LEAVE

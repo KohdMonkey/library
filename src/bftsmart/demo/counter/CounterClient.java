@@ -38,7 +38,7 @@ public class CounterClient {
             System.exit(-1);
         }
 
-        ServiceProxy counterProxy = new ServiceProxy(Integer.parseInt(args[0]), true);
+        ServiceProxy counterProxy = new ServiceProxy(Integer.parseInt(args[0]), false);
         
         try {
 

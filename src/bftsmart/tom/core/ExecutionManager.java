@@ -252,8 +252,9 @@ public final class ExecutionManager {
                 }
                 stoppedMsgsLock.unlock();
             } else {
-                if (isRetrievingState || 
-                        msg.getNumber() > (lastConsId + 1) || 
+                if (isRetrievingState ||
+                        //msg.getNumber() > (lastConsId + 1) ||
+                        msg.getNumber() > (lastConsId + 1) ||
                         (inExec != -1 && inExec < msg.getNumber()) || 
                         (inExec == -1 && (msg.getType() == MessageFactory.WRITE || msg.getType() == MessageFactory.ACCEPT))) { //not propose message for the next consensus
                     logger.debug("Message for consensus " + 

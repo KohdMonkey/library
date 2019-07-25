@@ -379,8 +379,9 @@ public class ClientsManager {
         
         //Is this a leader replay attack?
         if (!fromClient && clientData.getSession() == request.getSession() &&
+                //                clientData.getLastMessageDelivered() >= request.getSequence()) {
                 clientData.getLastMessageDelivered() >= request.getSequence()) {
-            
+                //hack to bypass replay check
             clientData.clientLock.unlock();
             logger.warn("Detected a leader replay attack, rejecting request");
             return false;
@@ -420,7 +421,8 @@ public class ClientsManager {
 
         if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
                 (clientData.getLastMessageReceived() + 1 == request.getSequence()) || //message received is the expected
-                ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
+                ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient) ||
+                (request.getSequence() == clientData.getLastMessageReceived()) && !request.isSpeculative()) {
 
             //enforce the "external validity" property, i.e, verify if the
             //requests are valid in accordance to the application semantics
@@ -480,6 +482,7 @@ public class ClientsManager {
         } else {
             //I will not put this message on the pending requests list
             if (clientData.getLastMessageReceived() >= request.getSequence()) {
+                logger.debug("[ClientsManager] same request");
                 //I already have/had this message
                 
                 //send reply if it is available

@@ -98,7 +98,7 @@ public class ServersCommunicationLayer extends Thread {
     private List<PendingConnection> pendingConn = new LinkedList<PendingConnection>();
     private ServiceReplica replica;
     
-    private int speculativeMessagesSeen = 0;
+    private int messagesSent = 0;
     /**
 	 * Tulio A. Ribeiro
 	 * SSL / TLS.
@@ -277,53 +277,80 @@ public class ServersCommunicationLayer extends Thread {
 
 
         //malicious leader, only trigger for consensus messages
-        boolean sent = false;
-        boolean faulty = true; //add as param to constructor later
-        if(faulty && me == 0 && sm instanceof ConsensusMessage) {
-            ConsensusMessage m = (ConsensusMessage)sm;
-            //only withhold speculative messages for now
-            if(m.getType() == MessageFactory.EXECUTE) {
-                if(speculativeMessagesSeen < 5) {
-                    speculativeMessagesSeen++;
-                }else{
-                    logger.debug("[ServerCommSystem] Leader withholding speculative message after {} messages", speculativeMessagesSeen);
-                    for (int target : targetsShuffled) {
-                        try {
-                            if (target == me) {
-                                sm.authenticated = true;
-                                inQueue.put(sm);
-                                logger.debug("Queueing (delivering) my own message, me:{}", target);
-                            } else if (target == 1) {
-                                logger.debug("[ServerCommSystem] dropping message to {}", target);
-                            }else{
-                                logger.debug("Sending message from:{} -> to:{}.", me, target);
-                                getConnection(target).send(data);
-                            }
-                        } catch (InterruptedException ex) {
-                            logger.error("Interruption while inserting message into inqueue", ex);
-                        }
+//        boolean sent = false;
+//        boolean faulty = true; //add as param to constructor later
+//        if(faulty && me == 0 && sm instanceof ConsensusMessage) {
+//            ConsensusMessage m = (ConsensusMessage)sm;
+//            //only withhold speculative messages for now
+//            if(m.getType() == MessageFactory.EXECUTE) {
+//                if(messagesSent < 0) {
+//                    messagesSent++;
+//                }else{
+//                    logger.debug("[ServerCommSystem] Leader withholding speculative message after {} messages", messagesSent);
+//                    for (int target : targetsShuffled) {
+//                        try {
+//                            if (target == me) {
+//                                sm.authenticated = true;
+//                                inQueue.put(sm);
+//                                logger.debug("Queueing (delivering) my own message, me:{}", target);
+////                                logger.debug("Not delivering my own message");
+//                            } else if (target == 1 || target == 2 || target == 3) {
+//                                logger.debug("[ServerCommSystem] dropping message to {}", target);
+//                            }else{
+//                                logger.debug("Sending message from:{} -> to:{}.", me, target);
+//                                getConnection(target).send(data);
+//                            }
+//                        } catch (InterruptedException ex) {
+//                            logger.error("Interruption while inserting message into inqueue", ex);
+//                        }
+//
+//                    }
+//                    sent = true;
+//                }
+//            }
+//        }
+//        if(!sent) {
+//            for (int target : targetsShuffled) {
+//                try {
+//                    if (target == me) {
+//                        sm.authenticated = true;
+//                        inQueue.put(sm);
+//                        logger.debug("Queueing (delivering) my own message, me:{}", target);
+//                    } else {
+//                        logger.debug("Sending message from:{} -> to:{}.", me, target);
+//                        getConnection(target).send(data);
+//                    }
+//                } catch (InterruptedException ex) {
+//                    logger.error("Interruption while inserting message into inqueue", ex);
+//                }
+//            }
+//        }
 
-                    }
-                    sent = true;
+//        if(messagesSent > 100) {
+//            try{
+//                Thread.sleep(500);
+//            }catch(Exception e){
+//                logger.debug("[ServerCommunicationSystem] failed to sleep!");
+//            }
+//        }
+
+        for (int target : targetsShuffled) {
+            try {
+                if (target == me) {
+                    sm.authenticated = true;
+                    inQueue.put(sm);
+                    logger.debug("Queueing (delivering) my own message, me:{}", target);
+                } else {
+                    logger.debug("Sending message from:{} -> to:{}.", me, target);
+                    getConnection(target).send(data);
                 }
+            } catch (InterruptedException ex) {
+                logger.error("Interruption while inserting message into inqueue", ex);
             }
         }
-        if(!sent) {
-            for (int target : targetsShuffled) {
-                try {
-                    if (target == me) {
-                        sm.authenticated = true;
-                        inQueue.put(sm);
-                        logger.debug("Queueing (delivering) my own message, me:{}", target);
-                    } else {
-                        logger.debug("Sending message from:{} -> to:{}.", me, target);
-                        getConnection(target).send(data);
-                    }
-                } catch (InterruptedException ex) {
-                    logger.error("Interruption while inserting message into inqueue", ex);
-                }
-            }
-        }
+
+        messagesSent++;
+
     }
 
     public void shutdown() {
