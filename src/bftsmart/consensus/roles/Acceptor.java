@@ -146,13 +146,14 @@ public class Acceptor {
 	 */
 	public void processMessage(ConsensusMessage msg) {
 		Consensus consensus = executionManager.getConsensus(msg.getNumber());
-        logger.debug("[Acceptor] received consensus message " + msg.getType());
-        logger.debug("[Acceptor] message number " + msg.getNumber());
-		logger.debug("[Acceptor] message value " + msg.getValue().toString());
+//        logger.debug("[Acceptor] received consensus message " + msg.getType());
+//        logger.debug("[Acceptor] message number " + msg.getNumber());
+//		logger.debug("[Acceptor] message value " + msg.getValue().toString());
 		consensus.lock.lock();
 		Epoch epoch = consensus.getEpoch(msg.getEpoch(), controller);
 		switch (msg.getType()) {
 		case MessageFactory.PROPOSE: {
+			logger.debug("received PROPOSE for {} at time {}", msg.getNumber(), System.currentTimeMillis());
 			proposeReceived(epoch, msg);
 		}
 			break;

@@ -453,6 +453,8 @@ public class ClientsManager {
                 //I don't have the message but it is valid, I will
                 //insert it in the pending requests of this client
 
+                logger.debug("Received message {} from client {} at time {}",request.getId(), clientData.getClientId(), System.currentTimeMillis());
+
 
                 //[ADD Code Here for Speculative queue]
                 request.recvFromClient = fromClient;
