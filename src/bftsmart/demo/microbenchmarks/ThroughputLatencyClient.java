@@ -261,7 +261,7 @@ public class ThroughputLatencyClient {
 
                 if (verbose && (req % 1000 == 0)) System.out.println(this.id + " // " + req + " operations sent!");
 
-		try {
+		        try {
                         
                         //sleeps interval ms before sending next request
                         if (interval > 0) {

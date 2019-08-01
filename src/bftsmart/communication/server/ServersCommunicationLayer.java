@@ -329,16 +329,16 @@ public class ServersCommunicationLayer extends Thread {
         if(me == 0 && sm instanceof ConsensusMessage) {
             ConsensusMessage m = (ConsensusMessage)sm;
             if(m.getType() == MessageFactory.PROPOSE) {
-                if(messagesSent > 2) {
-                    logger.debug("[ServersCommunicationSystem] delaying messages");
+                //delay every 5th message
+                if(((messagesSent+1) % 4) == 0) {
+                    logger.debug("[ServersCommunicationSystem] delaying messages {}", messagesSent);
                     try{
-                        Thread.sleep(500);
+                        Thread.sleep(50);
                     }catch(Exception e) {
                         logger.debug("[ServerCommunicationSystem] failed to sleep");
                     }
-                }else{
-                    messagesSent++;
                 }
+                messagesSent++;
             }
         }
 

@@ -68,6 +68,7 @@ public class ServiceProxy extends TOMSender {
 
 	private boolean testSpeculative;
 	private boolean speculative = false;
+	private long time;
 //    byte[] lastRequest = {(byte)0xCA, (byte)0xFE, (byte)0xBA, (byte)0xBE};
 
 	/**
@@ -268,6 +269,8 @@ public class ServiceProxy extends TOMSender {
 
 			TOMulticast(sm);
 		}else{
+			time = System.currentTimeMillis();
+
 		    logger.debug("[ServiceProxy] speculative: " + speculative);
 			TOMulticast(request, reqId, operationId, reqType, speculative);
 		}
@@ -462,6 +465,10 @@ public class ServiceProxy extends TOMSender {
                                     && (comparator.compare(replies[i].getContent(), reply.getContent()) == 0)) {
                                 sameContent++;
                                 if (sameContent >= replyQuorum) {
+                                	time = System.currentTimeMillis() - time;
+                                	logger.debug("TIME: " + time);
+
+
                                     response = extractor.extractResponse(replies, sameContent, pos);
                                     reqId = -1;
                                     this.sm.release(); // resumes the thread that is executing the "invoke" method
