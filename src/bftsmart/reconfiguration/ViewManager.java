@@ -20,6 +20,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -94,6 +95,7 @@ public class ViewManager {
     }
 
     public void addServer(int id, String ip, int port, int portRR) {
+        logger.debug("View Manager add server");
         this.controller.getStaticConf().addHostInfo(id, ip, port, portRR);
         rec.addServer(id, ip, port, portRR);
         addIds.add(id);
@@ -109,16 +111,21 @@ public class ViewManager {
 
     public void executeUpdates() {
         connect();
+
         ReconfigureReply r = rec.execute();
+
         View v = r.getView();
         logger.info("New view f: " + v.getF());
+        logger.debug("ReconfigurableReply new view" + r.getView().toString());
 
         VMMessage msg = new VMMessage(id, r);
 
-        if (addIds.size() > 0) { 
+        if (addIds.size() > 0) {
+            logger.debug("Sending message to: " + addIds.toString());
             sendResponse(addIds.toArray(new Integer[1]), msg);
             addIds.clear();
         }
+
     }
 
     private ServerConnection getConnection(int remoteId) {

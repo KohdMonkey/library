@@ -121,6 +121,7 @@ public final class DeliveryThread extends Thread {
 		for (TOMMessage decidedMessage : decidedMessages) {
 			if (decidedMessage.getReqType() == TOMMessageType.RECONFIG
 					&& decidedMessage.getViewID() == controller.getCurrentViewId()) {
+				logger.debug("[DeliveryThread] reconfigure message");
 				return true;
 			}
 		}

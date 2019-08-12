@@ -341,4 +341,14 @@ public class Configuration {
 			LoggerFactory.getLogger(this.getClass()).error("Could not load configuration", e);
 		}
 	}
+
+	//debug
+	public int[] gethostIDs() {
+		return hosts.getHostsIds();
+	}
+
+	public int getNumservers() {
+		return hosts.getNum();
+	}
+
 }

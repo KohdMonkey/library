@@ -19,6 +19,7 @@ import java.net.InetSocketAddress;
 import bftsmart.reconfiguration.views.View;
 import bftsmart.tom.util.KeyLoader;
 import java.security.Provider;
+import java.util.Arrays;
 
 /**
  *
@@ -44,6 +45,8 @@ public class ClientViewController extends ViewController {
             reconfigureTo(new View(0, getStaticConf().getInitialView(), 
                 getStaticConf().getF(), getInitAdddresses()));
         }else{
+            System.out.println("[ClientViewController] currentView not null");
+            System.out.println("processes: " + Arrays.toString(cv.getProcesses()));
             reconfigureTo(cv);
         }
     }

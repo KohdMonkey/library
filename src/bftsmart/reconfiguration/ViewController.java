@@ -47,6 +47,7 @@ public class ViewController {
     
     public final ViewStorage getViewStore() {
         if (this.viewStore == null) {
+            System.out.println("[ViewStore] view store not null");
             String className = staticConf.getViewStoreClass();
             try {
                 this.viewStore = (ViewStorage) Class.forName(className).newInstance();

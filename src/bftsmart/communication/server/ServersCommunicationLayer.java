@@ -125,10 +125,18 @@ public class ServersCommunicationLayer extends Thread {
         this.replica = replica;
         this.ssltlsProtocolVersion = controller.getStaticConf().getSSLTLSProtocolVersion();
 
+        //debug
+        logger.debug("proces id: " + controller.getStaticConf().getProcessId());
+        int hostIds[] = controller.getStaticConf().gethostIDs();
+        logger.debug("host ids: " + Arrays.toString(hostIds));
+        logger.debug("servers size: " + controller.getStaticConf().getNumservers());
+        logger.debug("host: " + controller.getStaticConf().getHost(controller.getStaticConf().getProcessId()));
+
         String myAddress;
         String confAddress =
                     controller.getStaticConf().getRemoteAddress(controller.getStaticConf().getProcessId()).getAddress().getHostAddress();
-        
+
+
         if (InetAddress.getLoopbackAddress().getHostAddress().equals(confAddress)) {
             myAddress = InetAddress.getLoopbackAddress().getHostAddress();
             }
@@ -188,15 +196,19 @@ public class ServersCommunicationLayer extends Thread {
 		SecretKeyFactory fac = TOMUtil.getSecretFactory();
 		PBEKeySpec spec = TOMUtil.generateKeySpec(SECRET.toCharArray());
 		selfPwd = fac.generateSecret(spec);
-        
+
+		logger.debug("Trying to establish connections");
       //Try connecting if a member of the current view. Otherwise, wait until the Join has been processed!
-        if (controller.isInCurrentView()) {
+        if (controller.isInCurrentView() || me == controller.getStaticConf().getTTPId()) {
             int[] initialV = controller.getCurrentViewAcceptors();
             for (int i = 0; i < initialV.length; i++) {
+                logger.debug("establishing connection with: " + initialV[i]);
                 if (initialV[i] != me) {
                     getConnection(initialV[i]);
                 }
             }
+        }else{
+            logger.debug("Controller is not in current view");
         }
 
         

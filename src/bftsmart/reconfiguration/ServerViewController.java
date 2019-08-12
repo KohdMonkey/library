@@ -16,10 +16,7 @@ limitations under the License.
 package bftsmart.reconfiguration;
 
 import java.net.InetSocketAddress;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import bftsmart.reconfiguration.views.View;
 import bftsmart.tom.core.TOMLayer;
@@ -70,6 +67,7 @@ public class ServerViewController extends ViewController {
                 getStaticConf().getF(), getInitAdddresses()));
         }else{
             logger.info("Using view stored on disk");
+            logger.info("current view: " + Arrays.toString(cv.getProcesses()));
             reconfigureTo(cv);
         }
        
@@ -113,6 +111,7 @@ public class ServerViewController extends ViewController {
                 && TOMUtil.verifySignature(getStaticConf().getPublicKey(request.getSender()),
                     request.toString().getBytes(), request.getSignature())) {
             //if (request.getSender() == getStaticConf().getTTPId()) {
+            logger.debug("[ServerViewController] enqueueing reconfiguration request" + request.toString());
                 this.updates.add(up);
         } else {
             logger.warn("Invalid reconfiguration from {}, discarding", up.getSender());
@@ -120,7 +119,7 @@ public class ServerViewController extends ViewController {
     }
 
     public byte[] executeUpdates(int cid) {
-
+        logger.debug("[Server View Controller] executing reconfiguration update");
 
         List<Integer> jSet = new LinkedList<>();
         List<Integer> rSet = new LinkedList<>();

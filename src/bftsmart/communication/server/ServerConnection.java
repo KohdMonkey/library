@@ -475,6 +475,7 @@ public class ServerConnection {
 								.readObject());
 
 						if (sm.getSender() == remoteId) {
+							logger.debug("[ServerConnection] got VMMessage from special client");
 							this.replica.joinMsgReceived((VMMessage) sm);
 						}
 

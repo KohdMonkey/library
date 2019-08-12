@@ -115,6 +115,7 @@ public class ServiceProxy extends TOMSender {
 		if (configHome == null) {
 			init(processId, loader);
 		} else {
+			logger.debug("[ServiceProxy] config home not null");
 			init(processId, configHome, loader);
 		}
 

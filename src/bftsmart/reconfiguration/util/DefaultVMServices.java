@@ -23,7 +23,7 @@ public class DefaultVMServices extends VMServices {
             (new DefaultVMServices()).removeServer(smartId);
             
                 
-        }else if(args.length == 3){
+        }else if(args.length == 4){
             System.out.println("####Tpp Service[Join]####");
 
             int smartId = Integer.parseInt(args[0]);
@@ -31,6 +31,7 @@ public class DefaultVMServices extends VMServices {
             int port = Integer.parseInt(args[2]);
             int portRR = Integer.parseInt(args[3]);
 
+            System.out.println("Adding service");
             (new DefaultVMServices()).addServer(smartId, ipAddress, port, portRR);
 
         }else{

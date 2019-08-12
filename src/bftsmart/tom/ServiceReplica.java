@@ -182,6 +182,7 @@ public class ServiceReplica {
         ReconfigureReply r = msg.getReply();
 
         if (r.getView().isMember(id)) {
+            logger.debug("[ServiceReplica] i am in the new view");
             this.SVController.processJoinResult(r);
 
             initTOMLayer(); // initiaze the TOM layer
@@ -190,6 +191,8 @@ public class ServiceReplica {
             waitTTPJoinMsgLock.lock();
             canProceed.signalAll();
             waitTTPJoinMsgLock.unlock();
+        }else{
+            logger.debug("[ServiceReplica] I am not in the reconfigured view");
         }
     }
 
@@ -349,6 +352,7 @@ public class ServiceReplica {
                                 throw new UnsupportedOperationException("Non-existent interface");
                             }   break;
                         case RECONFIG:
+                            logger.debug("[ServiceReplica] seen reconfigure request");
                             SVController.enqueueUpdate(request);
                             break;
                         default: //this code should never be executed

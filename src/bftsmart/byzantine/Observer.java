@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import bftsmart.reconfiguration.ServerViewController;
 
 
-public class Observer {
+public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static final int Alpha = 5; //number of marks before replica is blacklisted
@@ -25,6 +25,7 @@ public class Observer {
 
         marks = new int[n];
         blacklist = new int[n];
+
     }
 
 
@@ -45,6 +46,16 @@ public class Observer {
 
     public boolean isBlacklisted() {
         return true; // stuff here
+    }
+
+
+    public void run() {
+        System.out.println("Observer running");
+        try {
+            Thread.sleep(2000);
+        }catch(Exception e) {
+            System.out.println("observer thread cannot sleep");
+        }
     }
 
 
