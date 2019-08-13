@@ -91,10 +91,13 @@ public class MessageHandler {
 					else
 						logger.debug("Received leader change message from myself");
 					
-					if (lcMsg.TRIGGER_LC_LOCALLY)
+					if (lcMsg.TRIGGER_LC_LOCALLY) {
+						logger.debug("Triggering locally");
 						tomLayer.requestsTimer.run_lc_protocol();
-					else
+					}else {
+						logger.debug("Delivering timeoutrequest");
 						tomLayer.getSynchronizer().deliverTimeoutRequest(lcMsg);
+					}
 					/**************************************************************/
 
 				} else if (sm instanceof ForwardedMessage) {

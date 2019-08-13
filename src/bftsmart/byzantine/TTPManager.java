@@ -58,17 +58,8 @@ public class TTPManager {
         }
     }
 
-
-
-
-
-
-
-
-    public TTPManager() {
-        id = loadID("");
+    private void initializeConnections() {
         this.controller = new ServerViewController(id, "", null);
-//        conn = new ServerConnection(controller, null, 2, null, null);
 
         try {
             cs = new TTPServerCommunicationSystem(this.controller, null);
@@ -77,6 +68,21 @@ public class TTPManager {
             throw new RuntimeException("Unable to build a communication system.");
         }
         cs.start();
+    }
+
+
+
+
+
+
+    public TTPManager() {
+//        id = loadID("");
+        //creating connections to replicas
+//        initializeConnections();
+
+        ViewManager viewManager = new ViewManager("", null);
+        viewManager.viewChange();
+        viewManager.executeVC();
 
 
     }

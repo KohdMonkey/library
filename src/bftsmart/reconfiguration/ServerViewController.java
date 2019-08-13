@@ -15,12 +15,16 @@ limitations under the License.
 */
 package bftsmart.reconfiguration;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.util.*;
 
 import bftsmart.reconfiguration.views.View;
 import bftsmart.tom.core.TOMLayer;
 import bftsmart.tom.core.messages.TOMMessage;
+import bftsmart.tom.leaderchange.LCMessage;
 import bftsmart.tom.util.KeyLoader;
 import bftsmart.tom.util.TOMUtil;
 import java.security.Provider;
@@ -39,6 +43,7 @@ public class ServerViewController extends ViewController {
     public static final int ADD_SERVER = 0;
     public static final int REMOVE_SERVER = 1;
     public static final int CHANGE_F = 2;
+    public static final int VIEW_CHANGE = 3;
     
     private int quorumBFT; // ((n + f) / 2) replicas
     private int quorumCFT; // (n / 2) replicas
@@ -126,7 +131,7 @@ public class ServerViewController extends ViewController {
         int f = -1;
         
         List<String> jSetInfo = new LinkedList<>();
-        
+        boolean forceLC = false;
         
         for (int i = 0; i < updates.size(); i++) {
             ReconfigureRequest request = (ReconfigureRequest) TOMUtil.getObject(updates.get(i).getContent());
@@ -154,11 +159,14 @@ public class ServerViewController extends ViewController {
                     }
                 } else if (key == CHANGE_F) {
                     f = Integer.parseInt(value);
+                } else if(key == VIEW_CHANGE) {
+                    logger.debug("[ServerViewController] view change message received!");
+                    forceLC = true;
                 }
             }
 
         }
-        return reconfigure(jSetInfo, jSet, rSet, f, cid);
+        return reconfigure(jSetInfo, jSet, rSet, f, cid, forceLC);
     }
 
     private boolean contains(int id, List<Integer> list) {
@@ -170,12 +178,11 @@ public class ServerViewController extends ViewController {
         return false;
     }
 
-    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid) {
+    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid, boolean forceLC) {
         lastJoinStet = new int[jSet.size()];
         int[] nextV = new int[currentView.getN() + jSet.size() - rSet.size()];
         int p = 0;
-        
-        boolean forceLC = false;
+
         for (int i = 0; i < jSet.size(); i++) {
             lastJoinStet[i] = jSet.get(i);
             nextV[p++] = jSet.get(i);
@@ -185,7 +192,7 @@ public class ServerViewController extends ViewController {
             if (!contains(currentView.getProcesses()[i], rSet)) {
                 nextV[p++] = currentView.getProcesses()[i];
             } else if (tomLayer.execManager.getCurrentLeader() == currentView.getProcesses()[i]) {
-                
+                logger.debug("[ServerViewController] Forcing leader change");
                 forceLC = true;
  
             }
@@ -213,13 +220,46 @@ public class ServerViewController extends ViewController {
         if (forceLC) {
             
             //TODO: Reactive it and make it work
-            logger.info("Shortening LC timeout");
-            tomLayer.requestsTimer.stopTimer();
-            tomLayer.requestsTimer.setShortTimeout(3000);
-            tomLayer.requestsTimer.startTimer();
+//            logger.info("Shortening LC timeout");
+//            tomLayer.requestsTimer.stopTimer();
+//            tomLayer.requestsTimer.setShortTimeout(3000);
+//            tomLayer.requestsTimer.startTimer();
             //tomLayer.triggerTimeout(new LinkedList<TOMMessage>());
-                
-        } 
+            int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
+            this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
+            int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
+
+            ObjectOutputStream out = null;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] payload;
+            try { // serialize content to send in STOP message
+                out = new ObjectOutputStream(bos);
+                out.writeBoolean(false);
+
+                out.flush();
+                bos.flush();
+
+                payload = bos.toByteArray();
+
+                out.close();
+                bos.close();
+
+                logger.debug("[ServerViewController] sending LCMessage");
+                LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
+                this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
+
+            } catch (IOException ex) {
+                logger.error("Could not serialize STOP message", ex);
+            } finally {
+                try {
+                    out.close();
+                    bos.close();
+                } catch (IOException ex) {
+                    logger.error("Could not serialize STOP message", ex);
+                }
+            }
+
+        } //end forceLC
         return TOMUtil.getBytes(new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
                  cid, tomLayer.execManager.getCurrentLeader()));
     }

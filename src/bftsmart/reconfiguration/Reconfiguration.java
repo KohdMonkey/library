@@ -58,6 +58,12 @@ public class Reconfiguration {
     public void removeServer(int id){
         this.setReconfiguration(ServerViewController.REMOVE_SERVER, String.valueOf(id));
     }
+
+
+    public void viewChange() {
+        this.setReconfiguration(ServerViewController.VIEW_CHANGE, "");
+    }
+
     
 
     public void setF(int f){

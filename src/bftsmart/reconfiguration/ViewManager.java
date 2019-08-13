@@ -105,8 +105,23 @@ public class ViewManager {
         rec.removeServer(id);
     }
 
+    public void viewChange() {
+        rec.viewChange();
+    }
+
+
     public void setF(int f) {
         rec.setF(f);
+    }
+
+
+    public void executeVC() {
+        connect();
+
+        ReconfigureReply r = rec.execute();
+        View v = r.getView();
+        logger.info("New view f: " + v.getF());
+        logger.debug("ReconfigurableReply new view" + r.getView().toString());
     }
 
     public void executeUpdates() {
