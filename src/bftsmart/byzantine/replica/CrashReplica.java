@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import bftsmart.byzantine.Observer;
 import bftsmart.communication.ServerCommunicationSystem;
 import bftsmart.tom.MessageContext;
 import bftsmart.tom.ReplicaContext;
@@ -479,7 +480,9 @@ public class CrashReplica extends ServiceReplica {
 
         acceptor.setExecutionManager(executionManager);
 
-        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier);
+        Observer observer = new Observer(SVController);
+
+        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier, observer);
 
         executionManager.setTOMLayer(tomLayer);
 

@@ -342,7 +342,7 @@ public class ServersCommunicationLayer extends Thread {
             ConsensusMessage m = (ConsensusMessage)sm;
             if(m.getType() == MessageFactory.PROPOSE) {
                 //delay every 5th message
-                if(((messagesSent+1) % 4) == 0) {
+                if(((messagesSent+1) % 3) == 0) {
                     logger.debug("[ServersCommunicationSystem] delaying messages {}", messagesSent);
                     try{
                         Thread.sleep(50);

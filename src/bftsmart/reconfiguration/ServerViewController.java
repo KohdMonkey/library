@@ -106,6 +106,8 @@ public class ServerViewController extends ViewController {
         return this.currentView.getProcesses();
     }
 
+    public TOMLayer getTomLayer() { return tomLayer; }
+
     public boolean hasUpdates() {
         return !this.updates.isEmpty();
     }

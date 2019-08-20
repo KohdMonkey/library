@@ -52,11 +52,11 @@
    <logger name="bftsmart.byzantine.replica.RandomDelayReplica" level="TRACE"></logger>
    <logger name="bftsmart.reconfiguration.ViewManager" level="TRACE"></logger>
    <logger name="bftsmart.reconfiguration.ServerViewController" level="TRACE"></logger>
-
+   <logger name="bftsmart.byzantine.Observer" level="TRACE"></logger>
 
 
    
-  <!-- <logger name="bftsmart.byzantine.Observer" level="TRACE"></logger> -->
+  <!--  -->
   <!-- SPECIFIC CLASS LOGS -->
   <!--
   <logger name="bftsmart.consensus.roles.Acceptor" level="TRACE"></logger>

@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 
 import bftsmart.reconfiguration.ServerViewController;
 
+import java.util.HashMap;
+
 
 public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -14,10 +16,15 @@ public class Observer{
     public static final int Delta = 5; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 
+    private static final int MAX_EXPECTED_LATENCY = 20;
+
     private int[] marks;        //array to mark the replicas
     private int[] blacklist;    //array to blacklist replicas
 
     private ServerViewController controller;
+
+    private HashMap<Integer, Long> requestStart;
+
 
     public Observer(ServerViewController controller) {
         this.controller = controller;
@@ -26,14 +33,13 @@ public class Observer{
         marks = new int[n];
         blacklist = new int[n];
 
+        this.requestStart = new HashMap<>();
     }
 
 
     //marks the replica
     public void mark(int repID) {
-
-
-
+        marks[repID]++;
     }
 
 
@@ -46,6 +52,21 @@ public class Observer{
 
     public boolean isBlacklisted() {
         return true; // stuff here
+    }
+
+    public void recordReceivedTime(int requestHash, long receiveTime) {
+        requestStart.put(requestHash, receiveTime);
+    }
+
+    public void recordProposedTime(int requestHash, long proposedTime) {
+        logger.debug("[Observer] request proposed time: {}", proposedTime);
+        long delay = proposedTime - requestStart.get(requestHash);
+        logger.debug("[Observer] received time: {} delay: {}", requestStart.get(requestHash), delay);
+        if(delay > MAX_EXPECTED_LATENCY) {
+            int leader = controller.getTomLayer().execManager.getCurrentLeader();
+            mark(leader);
+            logger.debug("Marking leader. {} marks", marks[leader]);
+        }
     }
 
 

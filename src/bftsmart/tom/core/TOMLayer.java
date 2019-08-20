@@ -25,6 +25,7 @@ import java.security.SignedObject;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import bftsmart.byzantine.Observer;
 import bftsmart.clientsmanagement.ClientsManager;
 import bftsmart.clientsmanagement.RequestList;
 import bftsmart.communication.ServerCommunicationSystem;
@@ -73,6 +74,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     //private OutOfContextMessageThread ot; // Thread which manages messages that do not belong to the current consensus
     private DeliveryThread dt; // Thread which delivers total ordered messages to the appication
     public StateManager stateManager = null; // object which deals with the state transfer protocol
+
+    private Observer observer;
 
     //thread pool used to paralelise verification of requests contained in a batch
     private ExecutorService verifierExecutor = null;
@@ -138,7 +141,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             Acceptor a,
             ServerCommunicationSystem cs,
             ServerViewController controller,
-            RequestVerifier verifier) {
+            RequestVerifier verifier,
+            Observer observer) {
 
         super("TOM Layer");
 
@@ -146,6 +150,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.acceptor = a;
         this.communication = cs;
         this.controller = controller;
+        this.observer = observer;
         
         /*Tulio Ribeiro*/
         this.privateKey = this.controller.getStaticConf().getPrivateKey();
@@ -340,8 +345,10 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         } else {
             logger.debug("Received TOMMessage from client " + msg.getSender() + " with sequence number " + msg.getSequence() + " for session " + msg.getSession());
             logger.debug("[TOMLayer] receiving request from client, isspeculative: " + msg.isSpeculative());
+
             if (clientsManager.requestReceived(msg, true, communication)) {
-                
+                logger.debug("Request hash {} start, received {}: ", msg.hashCode(), msg.receptionTimestamp);
+                observer.recordReceivedTime(msg.hashCode(), msg.receptionTimestamp);
                 if(controller.getStaticConf().getBatchTimeout() == -1) {
                     haveMessages();
                 } else {
@@ -530,6 +537,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 final CountDownLatch latch = new CountDownLatch(requests.length);
 
                 for (TOMMessage request : requests) {
+
                     
                     verifierExecutor.submit(() -> {
                         try {
@@ -554,12 +562,15 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 latch.await();
                 
                 for (TOMMessage request : requests) {
-                    
+
                     if (request.isValid == false) {
                         
                         logger.warn("Request {} could not be added to the pending messages queue of its respective client", request);
                         return null;
                     }
+                    logger.debug("Proposed request hash {} time propose received {}", request.hashCode(), System.currentTimeMillis());
+                    logger.debug("reception timestamp: {}", request.receptionTimestamp);
+                    observer.recordProposedTime(request.hashCode(), request.receptionTimestamp);
                 }
             }
 

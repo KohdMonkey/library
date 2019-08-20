@@ -1,6 +1,7 @@
 package bftsmart.byzantine.replica;
 
 
+import bftsmart.byzantine.Observer;
 import bftsmart.byzantine.RandomDelayAcceptor;
 import bftsmart.communication.ServerCommunicationSystem;
 import bftsmart.consensus.messages.MessageFactory;
@@ -466,7 +467,9 @@ public class RandomDelayReplica extends ServiceReplica {
 
         acceptor.setExecutionManager(executionManager);
 
-        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier);
+        Observer observer = new Observer(SVController);
+
+        tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier, observer);
 
         executionManager.setTOMLayer(tomLayer);
 
