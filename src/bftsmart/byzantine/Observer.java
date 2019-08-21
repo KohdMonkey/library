@@ -13,7 +13,7 @@ import java.util.HashMap;
 public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final int ALPHA = 3; //number of marks before replica is blacklisted
+    public static final int ALPHA = 1; //number of marks before replica is blacklisted
     public static final int Delta = 1; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 

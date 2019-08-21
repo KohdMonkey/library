@@ -137,11 +137,19 @@ public class ServerConnection {
        //******* EDUARDO BEGIN **************//
         this.useSenderThread = this.controller.getStaticConf().isUseSenderThread();
 
-        if (useSenderThread && (this.controller.getStaticConf().getTTPId() != remoteId)) {
+        if (useSenderThread) {
             new SenderThread().start();
         } else {
             sendLock = new ReentrantLock();
         }
+
+        /**
+		 * if (useSenderThread && (this.controller.getStaticConf().getTTPId() != remoteId)) {
+		 new SenderThread().start();
+		 } else {
+		 sendLock = new ReentrantLock();
+		 }
+		 * */
         
         if (!this.controller.getStaticConf().isTheTTP()) {
             if (this.controller.getStaticConf().getTTPId() == remoteId) {
@@ -192,11 +200,13 @@ public class ServerConnection {
      */
     public final void send(byte[] data) throws InterruptedException {
     	if (useSenderThread) {
+    		logger.debug("Using sender thread");
 			// only enqueue messages if there queue is not full
 			if (!outQueue.offer(data)) {
 				logger.debug("Out queue for " + remoteId + " full (message discarded).");
 			}
 		} else {
+    		logger.debug("sending bytes");
 			sendLock.lock();
 			sendBytes(data);
 			sendLock.unlock();
@@ -214,6 +224,7 @@ public class ServerConnection {
 				return; // if there is a need to reconnect, abort this method
 			if (socket != null && socketOutStream != null) {
 				try {
+					logger.debug("Trying to send bytes");
 					// do an extra copy of the data to be sent, but on a single out stream write
 					byte[] data = new byte[5 + messageData.length];// without MAC
 					int value = messageData.length;
@@ -227,6 +238,7 @@ public class ServerConnection {
 
 					return;
 				} catch (IOException ex) {
+					logger.debug("There was an exception sending data");
 					closeSocket();
 					waitAndConnect();
 					abort = true;

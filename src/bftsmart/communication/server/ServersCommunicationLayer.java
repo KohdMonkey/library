@@ -276,7 +276,11 @@ public class ServersCommunicationLayer extends Thread {
 
     public final void sendVote(VoteMessage vote) {
         int TTPid = controller.getStaticConf().getTTPId();
+        logger.debug("TTPid: {}", TTPid);
         ServerConnection TTPConnection = this.connections.get(TTPid);
+        if(TTPConnection != null){
+            logger.debug("TTP connection not null");
+        }
 
         ByteArrayOutputStream bOut = new ByteArrayOutputStream(248);
         try {
@@ -289,7 +293,7 @@ public class ServersCommunicationLayer extends Thread {
 
 
         try {
-            logger.debug("Using TTPConnection to send vote");
+            logger.debug("Using TTPConnection to send vote to");
             TTPConnection.send(data);
         } catch (InterruptedException ex) {
             logger.error("Interruption while sending message to TTP", ex);

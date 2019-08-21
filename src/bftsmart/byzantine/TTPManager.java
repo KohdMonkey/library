@@ -67,7 +67,7 @@ public class TTPManager {
             logger.error("Failed to initialize client-to-replicas communication systems", ex);
             throw new RuntimeException("Unable to build a communication system.");
         }
-        cs.start();
+//        cs.start();
     }
 
     public void receiveVote(VoteMessage vote) {
