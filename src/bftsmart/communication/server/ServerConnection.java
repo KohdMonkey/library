@@ -44,6 +44,8 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManagerFactory;
 
+import bftsmart.byzantine.TTPManager;
+import bftsmart.byzantine.VoteMessage;
 import bftsmart.communication.SystemMessage;
 import bftsmart.reconfiguration.ServerViewController;
 import bftsmart.reconfiguration.VMMessage;
@@ -87,6 +89,8 @@ public class ServerConnection {
     
     private SecretKey secretKey = null;
 
+    private TTPManager manager;
+
     /**
      * Tulio A. Ribeiro
      * TLS vars. 
@@ -102,7 +106,9 @@ public class ServerConnection {
     public ServerConnection(ServerViewController controller, 
     		SSLSocket socket, int remoteId,
             LinkedBlockingQueue<SystemMessage> inQueue, 
-            ServiceReplica replica) {
+            ServiceReplica replica,
+			TTPManager manager) {
+    	this.manager = manager;
 
         this.controller = controller;
 
@@ -144,7 +150,10 @@ public class ServerConnection {
             } else {
                 new ReceiverThread().start();
             }
-        }
+        }else{
+        	logger.debug("Starting receiver thread for TTP");
+			new ReceiverThread().start();
+		}
         //******* EDUARDO END **************//
     }
 /**
@@ -413,8 +422,13 @@ public class ServerConnection {
 
 						//The verification it is done for the SSL/TLS protocol.
 						sm.authenticated = true;
+						if (sm instanceof VoteMessage) {
+							logger.debug("[ServerConnection] got Vote message");
+							manager.receiveVote((VoteMessage) sm);
+						}
 
 						if (sm.getSender() == remoteId) {
+							//processing vote message
 							if (!inQueue.offer(sm)) {
 								logger.warn("Inqueue full (message from " + remoteId + " discarded).");
 							}/* else {
@@ -478,7 +492,6 @@ public class ServerConnection {
 							logger.debug("[ServerConnection] got VMMessage from special client");
 							this.replica.joinMsgReceived((VMMessage) sm);
 						}
-
 					} catch (ClassNotFoundException ex) {
 						logger.error("Failed to deserialize message", ex);
 					} catch (IOException ex) {

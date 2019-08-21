@@ -62,7 +62,7 @@ public class TTPManager {
         this.controller = new ServerViewController(id, "", null);
 
         try {
-            cs = new TTPServerCommunicationSystem(this.controller, null);
+            cs = new TTPServerCommunicationSystem(this.controller, null, this);
         } catch (Exception ex) {
             logger.error("Failed to initialize client-to-replicas communication systems", ex);
             throw new RuntimeException("Unable to build a communication system.");
@@ -70,19 +70,21 @@ public class TTPManager {
         cs.start();
     }
 
-
+    public void receiveVote(VoteMessage vote) {
+        logger.debug("[TTPManager] vote received from {}", vote.getSender());
+    }
 
 
 
 
     public TTPManager() {
-//        id = loadID("");
+        id = loadID("");
         //creating connections to replicas
-//        initializeConnections();
+        initializeConnections();
 
-        ViewManager viewManager = new ViewManager("", null);
-        viewManager.viewChange();
-        viewManager.executeVC();
+//        ViewManager viewManager = new ViewManager("", null);
+//        viewManager.viewChange();
+//        viewManager.executeVC();
 
 
     }

@@ -51,21 +51,23 @@ public class TTPServerCommunicationSystem extends Thread {
     private ServersCommunicationLayer serversConn;
     private CommunicationSystemServerSide clientsConn;
     private ServerViewController controller;
+    private TTPManager manager;
 
 
     /**
      * Creates a new instance of ServerCommunicationSystem
      */
-    public TTPServerCommunicationSystem(ServerViewController controller, ServiceReplica replica) throws Exception {
+    public TTPServerCommunicationSystem(ServerViewController controller, ServiceReplica replica, TTPManager manager) throws Exception {
         super("Server Comm. System");
 
         this.controller = controller;
+        this.manager = manager;
 
         messageHandler = new MessageHandler();
 
         inQueue = new LinkedBlockingQueue<SystemMessage>(controller.getStaticConf().getInQueueSize());
 
-        serversConn = new ServersCommunicationLayer(controller, inQueue, replica);
+        serversConn = new ServersCommunicationLayer(controller, inQueue, replica, manager);
     }
 
     //******* EDUARDO BEGIN **************//

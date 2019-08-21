@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 
+import bftsmart.byzantine.VoteMessage;
 import bftsmart.communication.client.CommunicationSystemServerSide;
 import bftsmart.communication.client.CommunicationSystemServerSideFactory;
 import bftsmart.communication.client.RequestReceiver;
@@ -64,7 +65,7 @@ public class ServerCommunicationSystem extends Thread {
 
         inQueue = new LinkedBlockingQueue<SystemMessage>(controller.getStaticConf().getInQueueSize());
 
-        serversConn = new ServersCommunicationLayer(controller, inQueue, replica);
+        serversConn = new ServersCommunicationLayer(controller, inQueue, replica, null);
 
         //******* EDUARDO BEGIN **************//
             clientsConn = CommunicationSystemServerSideFactory.getCommunicationSystemServerSide(controller);
@@ -150,6 +151,12 @@ public class ServerCommunicationSystem extends Thread {
             serversConn.send(targets, sm, true);
         }
     }
+
+    public void sendVote(VoteMessage vote) {
+        logger.debug("[ServerCommSystem] sending vote");
+        serversConn.sendVote(vote);
+    }
+
 
     public ServersCommunicationLayer getServersConn() {
         return serversConn;

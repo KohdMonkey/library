@@ -34,6 +34,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import bftsmart.byzantine.TTPManager;
+import bftsmart.byzantine.VoteMessage;
 import bftsmart.communication.SystemMessage;
 import bftsmart.consensus.messages.ConsensusMessage;
 import bftsmart.consensus.messages.MessageFactory;
@@ -86,7 +88,7 @@ public class ServersCommunicationLayer extends Thread {
     
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-
+    private TTPManager manager;
     private ServerViewController controller;
     private LinkedBlockingQueue<SystemMessage> inQueue;
     private HashMap<Integer, ServerConnection> connections = new HashMap<>();
@@ -117,8 +119,10 @@ public class ServersCommunicationLayer extends Thread {
 
     public ServersCommunicationLayer(ServerViewController controller,
             LinkedBlockingQueue<SystemMessage> inQueue, 
-            ServiceReplica replica) throws Exception {
+            ServiceReplica replica,
+            TTPManager manager) throws Exception {
 
+        this.manager = manager;
         this.controller = controller;
         this.inQueue = inQueue;
         this.me = controller.getStaticConf().getProcessId();
@@ -261,13 +265,37 @@ public class ServersCommunicationLayer extends Thread {
         ServerConnection ret = this.connections.get(remoteId);
         if (ret == null) {
             ret = new ServerConnection(controller, null, 
-            		remoteId, this.inQueue, this.replica);
+            		remoteId, this.inQueue, this.replica, manager);
             this.connections.put(remoteId, ret);
         }
         connectionsLock.unlock();
         return ret;
     }
     //******* EDUARDO END **************//
+
+
+    public final void sendVote(VoteMessage vote) {
+        int TTPid = controller.getStaticConf().getTTPId();
+        ServerConnection TTPConnection = this.connections.get(TTPid);
+
+        ByteArrayOutputStream bOut = new ByteArrayOutputStream(248);
+        try {
+            new ObjectOutputStream(bOut).writeObject(vote);
+        } catch (IOException ex) {
+            logger.error("Failed to serialize message", ex);
+        }
+
+        byte[] data = bOut.toByteArray();
+
+
+        try {
+            logger.debug("Using TTPConnection to send vote");
+            TTPConnection.send(data);
+        } catch (InterruptedException ex) {
+            logger.error("Interruption while sending message to TTP", ex);
+        }
+
+    }
 
 
     public final void send(int[] targets, SystemMessage sm, boolean useMAC) {
@@ -457,7 +485,7 @@ public class ServersCommunicationLayer extends Thread {
                 //first time that this connection is being established
                 //System.out.println("THIS DOES NOT HAPPEN....."+remoteId);
                 this.connections.put(remoteId,
-                			new ServerConnection(controller, newSocket, remoteId, inQueue, replica));
+                			new ServerConnection(controller, newSocket, remoteId, inQueue, replica, manager));
             } else {
                 //reconnection	
             	logger.debug("ReConnecting with replica: {}", remoteId);

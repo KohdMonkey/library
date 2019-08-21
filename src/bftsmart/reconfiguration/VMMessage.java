@@ -35,7 +35,7 @@ public class VMMessage extends SystemMessage{
         this.reply = reply;
     }
     
-     public VMMessage(int from, ReconfigureReply reply){
+    public VMMessage(int from, ReconfigureReply reply){
          super(from);
          this.reply = reply;
     }

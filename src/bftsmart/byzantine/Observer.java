@@ -63,7 +63,7 @@ public class Observer{
         return vote;
     }
 
-    
+
     //marks the replica
     public void mark(int repID) {
         marks[repID]++;
@@ -75,6 +75,8 @@ public class Observer{
                 logger.debug("Need to start voting");
                 int vote = constructVote();
                 logger.debug("vote: {}", vote);
+                VoteMessage v = new VoteMessage(vote);
+                controller.getTomLayer().getCommunication().sendVote(v);
             }
         }
     }
