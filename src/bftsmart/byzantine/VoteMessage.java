@@ -18,6 +18,11 @@ public class VoteMessage extends SystemMessage {
         this.vote = vote;
     }
 
+    public VoteMessage(int from, int vote) {
+        super(from);
+        this.vote = vote;
+    }
+
     // Implemented method of the Externalizable interface
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {

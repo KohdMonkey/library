@@ -75,7 +75,8 @@ public class Observer{
                 logger.debug("Need to start voting");
                 int vote = constructVote();
                 logger.debug("vote: {}", vote);
-                VoteMessage v = new VoteMessage(vote);
+                int id = controller.getStaticConf().getProcessId();
+                VoteMessage v = new VoteMessage(id, vote);
                 controller.getTomLayer().getCommunication().sendVote(v);
             }
         }
