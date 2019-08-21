@@ -12,11 +12,15 @@ import java.util.HashMap;
 public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final int Alpha = 5; //number of marks before replica is blacklisted
-    public static final int Delta = 5; //f+Delta votes for successful removal
+    public static final int ALPHA = 3; //number of marks before replica is blacklisted
+    public static final int Delta = 1; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 
     private static final int MAX_EXPECTED_LATENCY = 20;
+
+    private int F;
+    private int N;
+
 
     private int[] marks;        //array to mark the replicas
     private int[] blacklist;    //array to blacklist replicas
@@ -28,18 +32,37 @@ public class Observer{
 
     public Observer(ServerViewController controller) {
         this.controller = controller;
-        int n = controller.getCurrentViewN();
+        this.N = controller.getCurrentViewN();
+        this.F = controller.getCurrentViewF();
 
-        marks = new int[n];
-        blacklist = new int[n];
+        marks = new int[this.N];
+        blacklist = new int[this.N];
 
         this.requestStart = new HashMap<>();
+    }
+
+    private int countMarkedReplicas() {
+        int toRemove = 0;
+        for(int i = 0; i < N; i++) {
+            if(marks[i] >= ALPHA)
+                toRemove++;
+        }
+
+        return toRemove;
     }
 
 
     //marks the replica
     public void mark(int repID) {
         marks[repID]++;
+        if(marks[repID] >= ALPHA) {
+            int leader = controller.getTomLayer().execManager.getCurrentLeader();
+            int toRemove = countMarkedReplicas();
+            //if the leader got ALPHA marks or F or more nodes got ALPHA marks, need to start voting
+            if(repID == leader || toRemove > F) {
+                logger.debug("Need to start voting");
+            }
+        }
     }
 
 
@@ -64,8 +87,8 @@ public class Observer{
         logger.debug("[Observer] received time: {} delay: {}", requestStart.get(requestHash), delay);
         if(delay > MAX_EXPECTED_LATENCY) {
             int leader = controller.getTomLayer().execManager.getCurrentLeader();
-            mark(leader);
             logger.debug("Marking leader. {} marks", marks[leader]);
+            mark(leader);
         }
     }
 
