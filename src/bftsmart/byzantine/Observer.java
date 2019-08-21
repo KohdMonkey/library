@@ -51,6 +51,17 @@ public class Observer{
         return toRemove;
     }
 
+    public int constructVote() {
+        int vote = 0;
+
+        for(int i = 0; i < N; i++) {
+            if(marks[i] >= ALPHA) {
+                vote |= (1 << i);
+            }
+        }
+        return vote;
+    }
+
 
     //marks the replica
     public void mark(int repID) {
@@ -61,6 +72,8 @@ public class Observer{
             //if the leader got ALPHA marks or F or more nodes got ALPHA marks, need to start voting
             if(repID == leader || toRemove > F) {
                 logger.debug("Need to start voting");
+                int vote = constructVote();
+                logger.debug("vote: {}", vote);
             }
         }
     }
