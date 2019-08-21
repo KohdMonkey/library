@@ -10,6 +10,7 @@ import java.io.ObjectOutput;
 public class VoteMessage extends SystemMessage {
 
     private int vote;
+    private int voteNum;
 
     public VoteMessage() {}
 
@@ -18,8 +19,9 @@ public class VoteMessage extends SystemMessage {
         this.vote = vote;
     }
 
-    public VoteMessage(int from, int vote) {
+    public VoteMessage(int from, int voteNum, int vote) {
         super(from);
+        this.voteNum = voteNum;
         this.vote = vote;
     }
 
@@ -27,6 +29,7 @@ public class VoteMessage extends SystemMessage {
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
+        out.writeObject(voteNum);
         out.writeObject(vote);
     }
 
@@ -34,8 +37,11 @@ public class VoteMessage extends SystemMessage {
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
+        this.voteNum = (int) in.readObject();
         this.vote = (int) in.readObject();
     }
 
     public int getVote() { return vote; }
+
+    public int getVoteNum() { return voteNum; }
 }

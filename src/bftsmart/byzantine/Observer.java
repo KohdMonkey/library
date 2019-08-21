@@ -22,6 +22,8 @@ public class Observer{
     private int F;
     private int N;
 
+    private int voteNum;
+
 
     private int[] marks;        //array to mark the replicas
     private int[] blacklist;    //array to blacklist replicas
@@ -35,6 +37,7 @@ public class Observer{
         this.controller = controller;
         this.N = controller.getCurrentViewN();
         this.F = controller.getCurrentViewF();
+        this.voteNum = 0;
 
         marks = new int[this.N];
         blacklist = new int[this.N];
@@ -76,7 +79,7 @@ public class Observer{
                 int vote = constructVote();
                 logger.debug("vote: {}", vote);
                 int id = controller.getStaticConf().getProcessId();
-                VoteMessage v = new VoteMessage(id, vote);
+                VoteMessage v = new VoteMessage(id, voteNum, vote);
                 controller.getTomLayer().getCommunication().sendVote(v);
             }
         }

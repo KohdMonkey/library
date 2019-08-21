@@ -70,8 +70,9 @@ public class TTPManager {
 //        cs.start();
     }
 
-    public void receiveVote(VoteMessage vote) {
-        logger.debug("[TTPManager] vote received from {}", vote.getSender());
+    public void receiveVote(VoteMessage msg) {
+        logger.debug("[TTPManager] vote received from {}", msg.getSender());
+        logger.debug("voteNum {} vote {}", msg.getVoteNum(), msg.getVote());
     }
 
 
