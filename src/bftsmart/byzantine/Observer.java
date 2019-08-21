@@ -1,6 +1,7 @@
 package bftsmart.byzantine;
 
 
+import bftsmart.communication.ServerCommunicationSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +63,7 @@ public class Observer{
         return vote;
     }
 
-
+    
     //marks the replica
     public void mark(int repID) {
         marks[repID]++;
