@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class TTPManager {
     private KeyLoader keyLoader;
@@ -24,6 +26,9 @@ public class TTPManager {
     private TTPServerCommunicationSystem cs;
     private ServerConnection conn;
 
+    private HashMap<Integer, int[]> votes;
+
+    private ReentrantLock voteLock = new ReentrantLock();
 
 
     private int loadID(String configHome) {
@@ -67,19 +72,57 @@ public class TTPManager {
             logger.error("Failed to initialize client-to-replicas communication systems", ex);
             throw new RuntimeException("Unable to build a communication system.");
         }
-//        cs.start();
+
     }
 
-    public void receiveVote(VoteMessage msg) {
-        logger.debug("[TTPManager] vote received from {}", msg.getSender());
-        logger.debug("voteNum {} vote {}", msg.getVoteNum(), msg.getVote());
+    public int[] getVote(int voteNum) {
+        voteLock.lock();
+
+        int[] vote = votes.get(voteNum);
+        if(vote == null) {
+            logger.debug("[TTPManager] new voting round");
+            vote = new int[controller.getStaticConf().getN()];
+            votes.put(voteNum, vote);
+        }
+
+        voteLock.unlock();
+
+        return vote;
+    }
+
+    public void processVote(int[] currentVoteRound, int vote) {
+        int N = controller.getStaticConf().getN();
+        for(int i = 0; i < N; i++) {
+            if((vote & (1 << i)) == 1) {
+                currentVoteRound[i]++;
+                logger.debug("vote against {} total: {}", i, currentVoteRound[i]);
+            }
+        }
+    }
+
+
+    public void receiveVote(VoteMessage voteMsg) {
+        logger.debug("[TTPManager] vote received from {}", voteMsg.getSender());
+        logger.debug("voteNum {} vote {}", voteMsg.getVoteNum(), voteMsg.getVote());
+
+        int voteNum = voteMsg.getVoteNum();
+        int[] currentVoteRound = getVote(voteNum);
+        if(currentVoteRound == null){
+            logger.error("TTPManager currentVoteRound NULL");
+        }
+
+
+        int vote = voteMsg.getVote();
+        processVote(currentVoteRound, vote);
     }
 
 
 
 
     public TTPManager() {
+        votes = new HashMap<>();
         id = loadID("");
+
         //creating connections to replicas
         initializeConnections();
 
