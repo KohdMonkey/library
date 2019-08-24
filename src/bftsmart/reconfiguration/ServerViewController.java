@@ -29,6 +29,8 @@ import bftsmart.tom.util.KeyLoader;
 import bftsmart.tom.util.TOMUtil;
 import java.security.Provider;
 
+import bftsmart.byzantine.Observer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,7 @@ public class ServerViewController extends ViewController {
     public static final int REMOVE_SERVER = 1;
     public static final int CHANGE_F = 2;
     public static final int VIEW_CHANGE = 3;
+    public static final int REPLACE_SERVER = 4;
     
     private int quorumBFT; // ((n + f) / 2) replicas
     private int quorumCFT; // (n / 2) replicas
@@ -52,6 +55,7 @@ public class ServerViewController extends ViewController {
     private List<TOMMessage> updates = new LinkedList<TOMMessage>();
     private TOMLayer tomLayer;
    // protected View initialView;
+    private Observer observer;
     
     public ServerViewController(int procId, KeyLoader loader) {
         this(procId,"", loader);
@@ -93,6 +97,8 @@ public class ServerViewController extends ViewController {
         this.tomLayer = tomLayer;
     }
 
+    public void setObserver(Observer observer) { this.observer = observer; }
+
     
     public boolean isInCurrentView() {
         return this.currentView.isMember(getStaticConf().getProcessId());
@@ -123,7 +129,11 @@ public class ServerViewController extends ViewController {
         } else {
             logger.warn("Invalid reconfiguration from {}, discarding", up.getSender());
         }
+        observer.setVoteNum(request.getCurrentVoteNum());
     }
+
+
+
 
     public byte[] executeUpdates(int cid) {
         logger.debug("[Server View Controller] executing reconfiguration update");
@@ -143,7 +153,8 @@ public class ServerViewController extends ViewController {
                 int key = it.next();
                 String value = request.getProperties().get(key);
 
-                if (key == ADD_SERVER) {
+                if (key == ADD_SERVER || key == REPLACE_SERVER) {
+                    //extract the server to add
                     StringTokenizer str = new StringTokenizer(value, ":");
                     if (str.countTokens() > 2) {
                         int id = Integer.parseInt(str.nextToken());
@@ -153,7 +164,18 @@ public class ServerViewController extends ViewController {
                             String host = str.nextToken();
                             int port = Integer.valueOf(str.nextToken());
                             int portRR = Integer.valueOf(str.nextToken());
-                            this.getStaticConf().addHostInfo(id, host, port, portRR);                        }
+                            this.getStaticConf().addHostInfo(id, host, port, portRR);
+                            logger.debug("[ServerViewController] adding server");
+                        }
+
+                        if(key == REPLACE_SERVER) {
+                            int removeId = Integer.parseInt(str.nextToken());
+                            logger.debug("[ServerViewController] removing server {} ", removeId);
+                            if(isCurrentViewMember(removeId))
+                                rSet.add(removeId);
+                            else
+                                logger.debug("[ServerViewController] node {} is not in the current view", removeId);
+                        }
                     }
                 } else if (key == REMOVE_SERVER) {
                     if (isCurrentViewMember(Integer.parseInt(value))) {
@@ -214,6 +236,7 @@ public class ServerViewController extends ViewController {
         logger.info("New view: " + newV);
         logger.info("Installed on CID: " + cid);
         logger.info("lastJoinSet: " + jSet);
+        logger.info("lastRemoveSet: " + rSet);
 
         //TODO:Remove all information stored about each process in rSet
         //processes execute the leave!!!

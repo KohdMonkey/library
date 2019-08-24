@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import bftsmart.byzantine.TTPManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,52 +48,60 @@ public class ViewManager {
     //Need only inform those that are entering the systems, as those already
     //in the system will execute the reconfiguration request
     private List<Integer> addIds = new LinkedList<Integer>();
+    private TTPManager ttpManager;
 
     public ViewManager(KeyLoader loader) {
         this("", loader);
     }
 
     public ViewManager(String configHome, KeyLoader loader) {
-        this.id = loadID(configHome);
+//        this.id = loadID(configHome);
         this.controller = new ServerViewController(id, configHome, loader);
         this.rec = new Reconfiguration(id, configHome, loader);
+    }
+
+    public ViewManager(int id, String configHome, KeyLoader loader, TTPManager ttpManager) {
+        this.id = id;
+        this.controller = new ServerViewController(id, configHome, loader);
+        this.rec = new Reconfiguration(id, configHome, loader);
+        this.ttpManager = ttpManager;
     }
 
     public void connect(){
         this.rec.connect();
     }
     
-    private int loadID(String configHome) {
-        try {
-            String path = "";
-            String sep = System.getProperty("file.separator");
-            if (configHome == null || configHome.equals("")) {
-                path = "config" + sep + "system.config";
-            } else {
-                path = configHome + sep + "system.config";
-            }
-            FileReader fr = new FileReader(path);
-            BufferedReader rd = new BufferedReader(fr);
-            String line = null;
-            while ((line = rd.readLine()) != null) {
-                if (!line.startsWith("#")) {
-                    StringTokenizer str = new StringTokenizer(line, "=");
-                    if (str.countTokens() > 1
-                            && str.nextToken().trim().equals("system.ttp.id")) {
-                        fr.close();
-                        rd.close();
-                        return Integer.parseInt(str.nextToken().trim());
-                    }
-                }
-            }
-            fr.close();
-            rd.close();
-            return -1;
-        } catch (Exception e) {
-            logger.error("Could not load ID", e);
-            return -1;
-        }
-    }
+//    private int loadID(String configHome) {
+//        try {
+//            String path = "";
+//            String sep = System.getProperty("file.separator");
+//            if (configHome == null || configHome.equals("")) {
+//                path = "config" + sep + "system.config";
+//            } else {
+//                path = configHome + sep + "system.config";
+//            }
+//            FileReader fr = new FileReader(path);
+//            BufferedReader rd = new BufferedReader(fr);
+//            String line = null;
+//            while ((line = rd.readLine()) != null) {
+//                if (!line.startsWith("#")) {
+//                    StringTokenizer str = new StringTokenizer(line, "=");
+//                    if (str.countTokens() > 1
+//                            && str.nextToken().trim().equals("system.ttp.id")) {
+//                        fr.close();
+//                        rd.close();
+//                        return Integer.parseInt(str.nextToken().trim());
+//                    }
+//                }
+//            }
+//            fr.close();
+//            rd.close();
+//            return -1;
+//        } catch (Exception e) {
+//            logger.error("Could not load ID", e);
+//            return -1;
+//        }
+//    }
 
     public void addServer(int id, String ip, int port, int portRR) {
         logger.debug("View Manager add server");
@@ -105,8 +114,16 @@ public class ViewManager {
         rec.removeServer(id);
     }
 
-    public void viewChange() {
+    public void replaceServer(int id, String ip, int port, int portRR, int removeId) {
+        logger.debug("[ViewManager] replace server");
+        this.controller.getStaticConf().addHostInfo(id, ip, port, portRR);
+        addIds.add(id);
+        rec.replaceServer(id, ip, port, portRR, removeId);
+    }
+
+    public void viewChange(int voteNum) {
         rec.viewChange();
+        rec.setVoteNum(voteNum);
     }
 
 
@@ -118,6 +135,7 @@ public class ViewManager {
     public void executeVC() {
         connect();
 
+        logger.debug("voteNum {}", rec.getVoteNum());
         ReconfigureReply r = rec.execute();
         View v = r.getView();
         logger.info("New view f: " + v.getF());
@@ -134,6 +152,7 @@ public class ViewManager {
         logger.debug("ReconfigurableReply new view" + r.getView().toString());
 
         VMMessage msg = new VMMessage(id, r);
+        msg.setCurrentVoteNum(ttpManager.getCurrentVoteNum());
 
         if (addIds.size() > 0) {
             logger.debug("Sending message to: " + addIds.toString());

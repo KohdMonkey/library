@@ -72,6 +72,16 @@ public class LCManager {
     
     private int currentLeader;
     //private Cipher cipher;
+
+
+    /* Constructor for limited TTP access to LC functions
+    *
+    * */
+    public LCManager(ServerViewController SVController) {
+        this.SVController = SVController;
+        this.currentLeader = 0;
+    }
+
     
     /**
      * Constructor

@@ -112,6 +112,12 @@ public class Observer{
         }
     }
 
+    public void setVoteNum(int voteNum) {
+        logger.debug("[Observer] reconfig request, setting vote num to {}", voteNum);
+        this.voteNum = voteNum;
+    }
+
+    public int getVoteNum() { return voteNum; }
 
     public void run() {
         System.out.println("Observer running");

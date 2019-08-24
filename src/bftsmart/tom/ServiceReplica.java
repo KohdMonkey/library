@@ -79,6 +79,7 @@ public class ServiceReplica {
     private ReplicaContext replicaCtx = null;
     private Replier replier = null;
     private RequestVerifier verifier = null;
+    private Observer observer;
 
     public ServiceReplica() {
 
@@ -138,6 +139,7 @@ public class ServiceReplica {
     public ServiceReplica(int id, String configHome, Executable executor, Recoverable recoverer, RequestVerifier verifier, Replier replier, KeyLoader loader) {
         this.id = id;
         this.SVController = new ServerViewController(id, configHome, loader);
+        this.observer = new Observer(SVController);
         this.executor = executor;
         this.recoverer = recoverer;
         this.replier = (replier != null ? replier : new DefaultReplier());
@@ -145,6 +147,7 @@ public class ServiceReplica {
         this.init();
         this.recoverer.setReplicaContext(replicaCtx);
         this.replier.setReplicaContext(replicaCtx);
+
     }
 
     // this method initializes the object
@@ -181,6 +184,9 @@ public class ServiceReplica {
      */
     public void joinMsgReceived(VMMessage msg) {
         ReconfigureReply r = msg.getReply();
+        logger.debug("vote num: {}", msg.getCurrentVoteNum());
+        logger.debug("observer vote num: {}", observer.getVoteNum());
+        observer.setVoteNum(msg.getCurrentVoteNum());
 
         if (r.getView().isMember(id)) {
             logger.debug("[ServiceReplica] i am in the new view");
@@ -480,13 +486,12 @@ public class ServiceReplica {
 
         acceptor.setExecutionManager(executionManager);
 
-        Observer observer = new Observer(SVController);
-
         tomLayer = new TOMLayer(executionManager, this, recoverer, acceptor, cs, SVController, verifier, observer);
 
         executionManager.setTOMLayer(tomLayer);
 
         SVController.setTomLayer(tomLayer);
+        SVController.setObserver(observer);
 
         cs.setTOMLayer(tomLayer);
         cs.setRequestReceiver(tomLayer);

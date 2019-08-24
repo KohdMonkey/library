@@ -29,6 +29,7 @@ import java.util.Iterator;
 public class ReconfigureRequest implements Externalizable{
 
     private int sender;
+    private int currentVoteNum;
     private Hashtable<Integer,String> properties = new Hashtable<Integer,String>();
     private byte[] signature;
     
@@ -55,6 +56,12 @@ public class ReconfigureRequest implements Externalizable{
     public int getSender() {
         return sender;
     }
+
+    public void setCurrentVoteNum(int currentVoteNum) {
+        this.currentVoteNum = currentVoteNum;
+    }
+
+    public int getCurrentVoteNum() { return currentVoteNum; }
     
     public void setProperty(int prop, String value){
         this.properties.put(prop, value);
@@ -65,9 +72,10 @@ public class ReconfigureRequest implements Externalizable{
         out.writeInt(sender);
         
         int num = properties.keySet().size();
-        
+
         out.writeInt(num);
-        
+        out.writeInt(currentVoteNum);
+
         Iterator<Integer> it = properties.keySet().iterator() ;
         
         while(it.hasNext()){
@@ -81,7 +89,7 @@ public class ReconfigureRequest implements Externalizable{
         
         out.writeInt(signature.length);
         out.write(signature);
-       
+
     }
 
      
@@ -90,6 +98,7 @@ public class ReconfigureRequest implements Externalizable{
         sender = in.readInt();
         
         int num = in.readInt();
+        this.currentVoteNum = in.readInt();
         
         for(int i = 0; i < num; i++){
             int key = in.readInt();
@@ -99,7 +108,8 @@ public class ReconfigureRequest implements Externalizable{
         
         this.signature = new byte[in.readInt()];
         in.read(this.signature);
-        
+
+
     }
     
     

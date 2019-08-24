@@ -27,6 +27,7 @@ import bftsmart.communication.SystemMessage;
  */
 public class VMMessage extends SystemMessage{
     private ReconfigureReply reply;
+    private int currentVoteNum;
     
     public VMMessage(){}
     
@@ -39,12 +40,16 @@ public class VMMessage extends SystemMessage{
          super(from);
          this.reply = reply;
     }
-     
+
+    public void setCurrentVoteNum(int currentVoteNum) { this.currentVoteNum = currentVoteNum; }
+
+    public int getCurrentVoteNum() { return currentVoteNum; }
      
       // Implemented method of the Externalizable interface
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
         super.writeExternal(out);
+        out.writeInt(currentVoteNum);
         out.writeObject(reply);
     }
 
@@ -52,6 +57,7 @@ public class VMMessage extends SystemMessage{
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         super.readExternal(in);
+        this.currentVoteNum = in.readInt();
         this.reply = (ReconfigureReply) in.readObject();
     }
 

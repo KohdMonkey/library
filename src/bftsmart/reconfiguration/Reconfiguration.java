@@ -59,17 +59,28 @@ public class Reconfiguration {
         this.setReconfiguration(ServerViewController.REMOVE_SERVER, String.valueOf(id));
     }
 
+    public void replaceServer(int id, String ip, int port, int portRR, int removeId) {
+        this.setReconfiguration(
+                ServerViewController.REPLACE_SERVER,
+                id + ":" +
+                        ip + ":" +
+                        port + ":" +
+                        portRR + ":" +
+                        removeId);
+    }
+
 
     public void viewChange() {
         this.setReconfiguration(ServerViewController.VIEW_CHANGE, "");
     }
 
-    
+    public void setVoteNum(int voteNum) { request.setCurrentVoteNum(voteNum); }
 
     public void setF(int f){
       this.setReconfiguration(ServerViewController.CHANGE_F,String.valueOf(f));  
     }
-    
+
+    public int getVoteNum() { return request.getCurrentVoteNum(); }
     
     public void setReconfiguration(int prop, String value){
         if(request == null){
