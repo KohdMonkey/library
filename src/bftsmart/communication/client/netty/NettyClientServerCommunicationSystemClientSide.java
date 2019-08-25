@@ -255,11 +255,14 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
 	@Override
 	public void send(boolean sign, int[] targets, TOMMessage sm) {
+		logger.debug("targets: {}", Arrays.toString(targets));
 
 		int quorum;
 
 		Integer[] targetArray = Arrays.stream(targets).boxed().toArray(Integer[]::new);
-		Collections.shuffle(Arrays.asList(targetArray), new Random());
+//		Collections.shuffle(Arrays.asList(targetArray), new Random());
+		ArrayList<Integer> targetList = new ArrayList<Integer>(Arrays.asList(targetArray));
+		Collections.shuffle(targetList, new Random());
 
 		if (controller.getStaticConf().isBFT()) {
 			quorum = (int) Math.ceil((controller.getCurrentViewN() + controller.getCurrentViewF()) / 2) + 1;
@@ -297,7 +300,8 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
 		int sent = 0;
 
-		for (int target : targetArray) {
+		//for (int target : targetArray) {
+		for (int target : targetList) {
 			// This is done to avoid a race condition with the writeAndFush method. Since
 			// the method is asynchronous,
 			// each iteration of this loop could overwrite the destination of the previous
@@ -309,10 +313,11 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 				continue;
 			}
 
-			sm.destination = targets[target];
+//			sm.destination = targets[target];
+			sm.destination = target;
 
 			rl.readLock().lock();
-			Channel channel = ((NettyClientServerSession) sessionClientToReplica.get(targets[target])).getChannel();
+			Channel channel = ((NettyClientServerSession) sessionClientToReplica.get(target)).getChannel();
 			rl.readLock().unlock();
 			if (channel.isActive()) {
 				sm.signed = sign;
@@ -322,7 +327,7 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
 				sent++;
 			} else {
-				logger.debug("Channel to " + targets[target] + " is not connected");
+				logger.debug("Channel to " + target + " is not connected");
 			}
 		}
 

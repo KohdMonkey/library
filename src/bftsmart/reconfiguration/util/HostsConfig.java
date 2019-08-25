@@ -76,6 +76,9 @@ public class HostsConfig {
             this.servers.put(id, new Config(id, host, port, portRR));
         }
     }
+
+    //maybe need a remove function
+
     
     public int getNum(){
         return servers.size();

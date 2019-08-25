@@ -56,11 +56,11 @@ public class VMServices {
      */
     public void addServer(int id, String ipAddress, int port, int portRR) {
         
-//        ViewManager viewManager = new ViewManager(configDir, keyLoader);
-//
-//        viewManager.addServer(id, ipAddress, port, portRR);
-//
-//        execute(viewManager);
+        ViewManager viewManager = new ViewManager(configDir, keyLoader);
+
+        viewManager.addServer(id, ipAddress, port, portRR);
+
+        execute(viewManager);
 
     }
     
@@ -71,11 +71,11 @@ public class VMServices {
      */
     public void removeServer (int id) {
         
-//        ViewManager viewManager = new ViewManager(keyLoader);
-//
-//        viewManager.removeServer(id);
-//
-//        execute(viewManager);
+        ViewManager viewManager = new ViewManager(keyLoader);
+
+        viewManager.removeServer(id);
+
+        execute(viewManager);
 
     }
     

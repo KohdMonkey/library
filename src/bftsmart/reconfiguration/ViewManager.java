@@ -55,7 +55,7 @@ public class ViewManager {
     }
 
     public ViewManager(String configHome, KeyLoader loader) {
-//        this.id = loadID(configHome);
+        this.id = loadID(configHome);
         this.controller = new ServerViewController(id, configHome, loader);
         this.rec = new Reconfiguration(id, configHome, loader);
     }
@@ -71,37 +71,37 @@ public class ViewManager {
         this.rec.connect();
     }
     
-//    private int loadID(String configHome) {
-//        try {
-//            String path = "";
-//            String sep = System.getProperty("file.separator");
-//            if (configHome == null || configHome.equals("")) {
-//                path = "config" + sep + "system.config";
-//            } else {
-//                path = configHome + sep + "system.config";
-//            }
-//            FileReader fr = new FileReader(path);
-//            BufferedReader rd = new BufferedReader(fr);
-//            String line = null;
-//            while ((line = rd.readLine()) != null) {
-//                if (!line.startsWith("#")) {
-//                    StringTokenizer str = new StringTokenizer(line, "=");
-//                    if (str.countTokens() > 1
-//                            && str.nextToken().trim().equals("system.ttp.id")) {
-//                        fr.close();
-//                        rd.close();
-//                        return Integer.parseInt(str.nextToken().trim());
-//                    }
-//                }
-//            }
-//            fr.close();
-//            rd.close();
-//            return -1;
-//        } catch (Exception e) {
-//            logger.error("Could not load ID", e);
-//            return -1;
-//        }
-//    }
+    private int loadID(String configHome) {
+        try {
+            String path = "";
+            String sep = System.getProperty("file.separator");
+            if (configHome == null || configHome.equals("")) {
+                path = "config" + sep + "system.config";
+            } else {
+                path = configHome + sep + "system.config";
+            }
+            FileReader fr = new FileReader(path);
+            BufferedReader rd = new BufferedReader(fr);
+            String line = null;
+            while ((line = rd.readLine()) != null) {
+                if (!line.startsWith("#")) {
+                    StringTokenizer str = new StringTokenizer(line, "=");
+                    if (str.countTokens() > 1
+                            && str.nextToken().trim().equals("system.ttp.id")) {
+                        fr.close();
+                        rd.close();
+                        return Integer.parseInt(str.nextToken().trim());
+                    }
+                }
+            }
+            fr.close();
+            rd.close();
+            return -1;
+        } catch (Exception e) {
+            logger.error("Could not load ID", e);
+            return -1;
+        }
+    }
 
     public void addServer(int id, String ip, int port, int portRR) {
         logger.debug("View Manager add server");
@@ -145,6 +145,7 @@ public class ViewManager {
     public void executeUpdates() {
         connect();
 
+        rec.setVoteNum(0);
         ReconfigureReply r = rec.execute();
 
         View v = r.getView();
@@ -152,7 +153,8 @@ public class ViewManager {
         logger.debug("ReconfigurableReply new view" + r.getView().toString());
 
         VMMessage msg = new VMMessage(id, r);
-        msg.setCurrentVoteNum(ttpManager.getCurrentVoteNum());
+        msg.setCurrentVoteNum(0);
+//        msg.setCurrentVoteNum(ttpManager.getCurrentVoteNum());
 
         if (addIds.size() > 0) {
             logger.debug("Sending message to: " + addIds.toString());
