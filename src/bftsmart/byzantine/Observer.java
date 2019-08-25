@@ -17,7 +17,7 @@ public class Observer{
     public static final int Delta = 1; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 
-    private static final int MAX_EXPECTED_LATENCY = 20;
+    private static final int MAX_EXPECTED_LATENCY = 40;
 
     private int F;
     private int N;
@@ -89,7 +89,6 @@ public class Observer{
     //blacklist the replica
     public void blacklist(int repID) {
 
-
     }
 
 
@@ -98,17 +97,20 @@ public class Observer{
     }
 
     public void recordReceivedTime(int requestHash, long receiveTime) {
+        logger.debug("Received request {} at time {}", requestHash, receiveTime);
         requestStart.put(requestHash, receiveTime);
     }
 
     public void recordProposedTime(int requestHash, long proposedTime) {
-        logger.debug("[Observer] request proposed time: {}", proposedTime);
-        long delay = proposedTime - requestStart.get(requestHash);
-        logger.debug("[Observer] received time: {} delay: {}", requestStart.get(requestHash), delay);
-        if(delay > MAX_EXPECTED_LATENCY) {
-            int leader = controller.getTomLayer().execManager.getCurrentLeader();
-            logger.debug("Marking leader. {} marks", marks[leader]);
-            mark(leader);
+        logger.debug("[Observer] request {} proposed time: {}", requestHash, proposedTime);
+        if(requestStart.get(requestHash) != null) {
+            long delay = proposedTime - requestStart.get(requestHash);
+            logger.debug("[Observer] received time: {} delay: {}", requestStart.get(requestHash), delay);
+            if(delay > MAX_EXPECTED_LATENCY) {
+                int leader = controller.getTomLayer().execManager.getCurrentLeader();
+                logger.debug("Marking leader. {} marks", marks[leader]);
+                mark(leader);
+            }
         }
     }
 

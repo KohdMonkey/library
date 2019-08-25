@@ -145,7 +145,7 @@ public class ViewManager {
     public void executeUpdates() {
         connect();
 
-        rec.setVoteNum(0);
+//        rec.setVoteNum(0);
         ReconfigureReply r = rec.execute();
 
         View v = r.getView();
@@ -153,8 +153,8 @@ public class ViewManager {
         logger.debug("ReconfigurableReply new view" + r.getView().toString());
 
         VMMessage msg = new VMMessage(id, r);
-        msg.setCurrentVoteNum(0);
-//        msg.setCurrentVoteNum(ttpManager.getCurrentVoteNum());
+//        msg.setCurrentVoteNum(0);
+        msg.setCurrentVoteNum(ttpManager.getCurrentVoteNum());
 
         if (addIds.size() > 0) {
             logger.debug("Sending message to: " + addIds.toString());
