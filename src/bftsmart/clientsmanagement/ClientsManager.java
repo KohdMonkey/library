@@ -55,8 +55,12 @@ public class ClientsManager {
     private byte[] benchMsg = null;
     private byte[] benchSig = null;
     private HashMap<String,Signature> benchEngines = new HashMap<>();
-    
+
+    private ArrayList<Integer> specTxns = new ArrayList<>();
+
     private ReentrantLock clientsLock = new ReentrantLock();
+
+
 
     public ClientsManager(ServerViewController controller, RequestsTimer timer, RequestVerifier verifier) {
         this.controller = controller;
@@ -257,8 +261,11 @@ public class ClientsManager {
                 if (!reqs.isEmpty()) {
                     for(TOMMessage msg:reqs) {
                         if(!msg.alreadyProposed) {
+                            logger.debug("have regular requests to process");
                             havePending = true;
                             break;
+                        }else{
+                            logger.debug("message: {} is already proposed", msg.getId());
                         }
                     }
                 }
@@ -389,6 +396,10 @@ public class ClientsManager {
         request.receptionTime = receptionTime;
         request.receptionTimestamp = receptionTimestamp;
         logger.debug("[ClientsManager] speculative: " + request.isSpeculative());
+
+        //if it is a new speculative txn
+        if(request.isSpeculative() && !specTxns.contains(request.hashCode()))
+            specTxns.add(request.hashCode());
         
         /******* BEGIN CLIENTDATA CRITICAL SECTION ******/
         //Logger.println("(ClientsManager.requestReceived) lock for client "+clientData.getClientId()+" acquired");
@@ -421,13 +432,22 @@ public class ClientsManager {
         logger.debug("[ClientsManager] request sequence number: {}", request.getSequence());
 
         if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
-                (clientData.getLastMessageReceived() + 1 == request.getSequence()) || //message received is the expected
+                (request.isSpeculative() && (clientData.getLastMessageReceived() + 1 == request.getSequence())) ||
+                (!request.isSpeculative()
+                        && (specTxns.contains(request.hashCode()))
+                        && (clientData.getLastMessageReceived() == request.getSequence())) || //message received is the expected
                 ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
+//
+//            if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
+//                    (clientData.getLastMessageReceived() + 1 == request.getSequence()) || //message received is the expected
+//                    ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
 
             //enforce the "external validity" property, i.e, verify if the
             //requests are valid in accordance to the application semantics
             //and not an erroneous requests sent by a Byzantine leader.
             boolean isValid = (!controller.getStaticConf().isBFT() || verifier.isValidRequest(request));
+            if(!isValid)
+                logger.debug("[ClientsManager] request not valid");
 
             Signature engine = benchEngines.get(Thread.currentThread().getName());
             
@@ -464,6 +484,7 @@ public class ClientsManager {
                     logger.debug("[ClientsManager->requestReceived] adding request to speculative list");
                     clientData.getPendingSpeculativeRequests().add(request);
                 }else{
+                    logger.debug("[ClientsManager->requestReceived] adding request to regular list");
                     clientData.getPendingRequests().add(request);
                 }
                 clientData.setLastMessageReceived(request.getSequence());
@@ -485,6 +506,7 @@ public class ClientsManager {
             //I will not put this message on the pending requests list
             if (clientData.getLastMessageReceived() >= request.getSequence()) {
                 //I already have/had this message
+                logger.debug("[ClientsManager]request already processed");
                 
                 //send reply if it is available
                 TOMMessage reply = clientData.getReply(request.getSequence());
@@ -504,7 +526,6 @@ public class ClientsManager {
                 }
                 accounted = true;
             } else {
-                
                 logger.warn("Message from client {} is too forward", clientData.getClientId());
                 
                 //a too forward message... the client must be malicious

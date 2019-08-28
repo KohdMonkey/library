@@ -248,8 +248,11 @@ public class ServiceProxy extends TOMSender {
 		// Send the request to the replicas, and get its ID
 
 		//generate new IDs only for speculative requests
-        reqId = generateRequestId(reqType);
-        operationId = generateOperationId();
+		if(speculative) {
+			reqId = generateRequestId(reqType);
+			operationId = generateOperationId();
+			logger.debug("[ServiceProxy] reqId: {}  operationId: {}", reqId, operationId);
+		}
 		requestType = reqType;
 
 		replyServer = -1;

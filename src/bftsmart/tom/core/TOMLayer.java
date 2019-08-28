@@ -451,7 +451,6 @@ public final class TOMLayer extends Thread implements RequestReceiver {
             
             logger.debug("There are requests to be ordered. I will propose.");
 
-
             if ((execManager.getCurrentLeader() == this.controller.getStaticConf().getProcessId()) && //I'm the leader
                     (clientsManager.havePendingRequests()) && //there are messages to be ordered
                     (getInExec() == -1)) { //there is no consensus in execution
@@ -459,6 +458,7 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                 // Sets the current consensus
                 int execId = getLastExec() + 1;
                 setInExec(execId);
+                logger.debug("ExeId: {}", execId);
 
                 Decision dec = execManager.getConsensus(execId).getDecision();
 
