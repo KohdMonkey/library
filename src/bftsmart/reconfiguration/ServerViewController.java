@@ -170,9 +170,12 @@ public class ServerViewController extends ViewController {
 
                         if(key == REPLACE_SERVER) {
                             int removeId = Integer.parseInt(str.nextToken());
+
                             logger.debug("[ServerViewController] removing server {} ", removeId);
-                            if(isCurrentViewMember(removeId))
+                            if(isCurrentViewMember(removeId)){
                                 rSet.add(removeId);
+                                observer.removeMarks(removeId);
+                            }
                             else
                                 logger.debug("[ServerViewController] node {} is not in the current view", removeId);
                         }

@@ -417,6 +417,8 @@ public class ClientsManager {
             clientData.getOrderedRequests().clear();
             clientData.getPendingRequests().clear();
         }
+        logger.debug("[ClientsManager] lastmessagereceived: {}", clientData.getLastMessageReceived());
+        logger.debug("[ClientsManager] request sequence number: {}", request.getSequence());
 
         if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
                 (clientData.getLastMessageReceived() + 1 == request.getSequence()) || //message received is the expected

@@ -8,12 +8,13 @@ import org.slf4j.LoggerFactory;
 import bftsmart.reconfiguration.ServerViewController;
 
 import java.util.HashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final int ALPHA = 1; //number of marks before replica is blacklisted
+    public static final int ALPHA = 50; //number of marks before replica is blacklisted
     public static final int Delta = 1; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 
@@ -26,12 +27,13 @@ public class Observer{
 
 
     private int[] marks;        //array to mark the replicas
-    private int[] blacklist;    //array to blacklist replicas
+    private boolean[] blacklist;    //array to blacklist replicas
 
     private ServerViewController controller;
 
     private HashMap<Integer, Long> requestStart;
 
+    private ReentrantLock marksLock = new ReentrantLock();
 
     public Observer(ServerViewController controller) {
         this.controller = controller;
@@ -40,7 +42,7 @@ public class Observer{
         this.voteNum = 0;
 
         marks = new int[this.N];
-        blacklist = new int[this.N];
+        blacklist = new boolean[this.N];
 
         this.requestStart = new HashMap<>();
     }
@@ -66,23 +68,35 @@ public class Observer{
         return vote;
     }
 
+    public void removeMarks(int removedId) {
+        marksLock.lock();
+        logger.debug("Removing marks for: {}", removedId);
+        marks[removedId] = 0;
+        blacklist[removedId] = true;
+        marksLock.unlock();
+    }
+
 
     //marks the replica
     public void mark(int repID) {
+        marksLock.lock();
         marks[repID]++;
+        logger.debug("repID {} marks {}", repID, marks[repID]);
         if(marks[repID] >= ALPHA) {
             int leader = controller.getTomLayer().execManager.getCurrentLeader();
             int toRemove = countMarkedReplicas();
             //if the leader got ALPHA marks or F or more nodes got ALPHA marks, need to start voting
-            if(repID == leader || toRemove > F) {
-                logger.debug("Need to start voting");
+            if((repID == leader || toRemove > F) && !blacklist[leader]) {
+                logger.debug("Need to start voting repID {} toRemove{}", repID, toRemove);
                 int vote = constructVote();
                 logger.debug("vote: {}", vote);
                 int id = controller.getStaticConf().getProcessId();
                 VoteMessage v = new VoteMessage(id, voteNum, vote);
                 controller.getTomLayer().getCommunication().sendVote(v);
+                blacklist[repID] = true;
             }
         }
+        marksLock.unlock();
     }
 
 
@@ -108,7 +122,7 @@ public class Observer{
             logger.debug("[Observer] received time: {} delay: {}", requestStart.get(requestHash), delay);
             if(delay > MAX_EXPECTED_LATENCY) {
                 int leader = controller.getTomLayer().execManager.getCurrentLeader();
-                logger.debug("Marking leader. {} marks", marks[leader]);
+                logger.debug("Marking leader{}. {} marks", leader, marks[leader]);
                 mark(leader);
             }
         }

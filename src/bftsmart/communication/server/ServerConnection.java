@@ -436,7 +436,8 @@ public class ServerConnection {
 						sm.authenticated = true;
 						if (sm instanceof VoteMessage) {
 							logger.debug("[ServerConnection] got Vote message");
-							manager.receiveVote((VoteMessage) sm);
+							if(sm != null)
+								manager.receiveVote((VoteMessage) sm);
 						}
 
 						if (sm.getSender() == remoteId) {
