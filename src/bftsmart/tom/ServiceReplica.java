@@ -81,6 +81,8 @@ public class ServiceReplica {
     private RequestVerifier verifier = null;
     private Observer observer;
 
+    private ArrayList<Integer> seenTxns = new ArrayList<>();
+
     public ServiceReplica() {
 
     }
