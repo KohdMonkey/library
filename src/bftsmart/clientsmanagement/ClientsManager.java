@@ -414,7 +414,7 @@ public class ClientsManager {
                 //clients should not have more than defined in the config file
                 //outstanding messages, otherwise they will be dropped.
                 //just account for the message reception
-                clientData.setLastMessageReceived(request.getSequence());
+                clientData.setLastMessageReceived(request.getSequence(), request.isSpeculative());
                 clientData.setLastMessageReceivedTime(request.receptionTime);
 
                 clientData.clientLock.unlock();
@@ -426,8 +426,9 @@ public class ClientsManager {
         //new session... just reset the client counter
         if (clientData.getSession() != request.getSession()) {
             clientData.setSession(request.getSession());
-            clientData.setLastMessageReceived(-1);
-
+//            clientData.setLastMessageReceived(-1);
+            clientData.setLastMessageReceived(-1, false);
+            clientData.setLastMessageReceived(-1, true);
 //            clientData.setLastMessageDelivered(-1);
 //            clientData.setLastSpecMessageDelivered(-1);
 //            clientData.setLastRegMessageDelivered(-1);
@@ -437,19 +438,19 @@ public class ClientsManager {
             clientData.getOrderedRequests().clear();
             clientData.getPendingRequests().clear();
         }
-        logger.debug("[ClientsManager] lastmessagereceived: {}", clientData.getLastMessageReceived());
+        logger.debug("[ClientsManager] lastmessagereceived: {}", clientData.getLastMessageReceived(request.isSpeculative()));
         logger.debug("[ClientsManager] request sequence number: {}", request.getSequence());
 
-        if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
-                (request.isSpeculative() && (clientData.getLastMessageReceived() + 1 == request.getSequence())) ||
-                (!request.isSpeculative()
-                        && (specTxns.contains(request.hashCode()))
-                        && (clientData.getLastMessageReceived() == request.getSequence())) || //message received is the expected
-                ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
+//        if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
+//                (request.isSpeculative() && (clientData.getLastMessageReceived() + 1 == request.getSequence())) ||
+//                (!request.isSpeculative()
+//                        && (specTxns.contains(request.hashCode()))
+//                        && (clientData.getLastMessageReceived() == request.getSequence())) || //message received is the expected
+//                ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
 //
-//            if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
-//                    (clientData.getLastMessageReceived() + 1 == request.getSequence()) || //message received is the expected
-//                    ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
+            if ((clientData.getLastMessageReceived(request.isSpeculative()) == -1) || //first message received or new session (see above)
+                    (clientData.getLastMessageReceived(request.isSpeculative()) + 1 == request.getSequence()) || //message received is the expected
+                    ((request.getSequence() > clientData.getLastMessageReceived(request.isSpeculative())) && !fromClient)) {
 
             //enforce the "external validity" property, i.e, verify if the
             //requests are valid in accordance to the application semantics
@@ -496,7 +497,7 @@ public class ClientsManager {
                     logger.debug("[ClientsManager->requestReceived] adding request to regular list");
                     clientData.getPendingRequests().add(request);
                 }
-                clientData.setLastMessageReceived(request.getSequence());
+                clientData.setLastMessageReceived(request.getSequence(), request.isSpeculative());
                 clientData.setLastMessageReceivedTime(request.receptionTime);
 
                 //create a timer for this message
@@ -513,7 +514,7 @@ public class ClientsManager {
             }
         } else {
             //I will not put this message on the pending requests list
-            if (clientData.getLastMessageReceived() >= request.getSequence()) {
+            if (clientData.getLastMessageReceived(request.isSpeculative()) >= request.getSequence()) {
                 //I already have/had this message
                 logger.debug("[ClientsManager]request already processed");
                 

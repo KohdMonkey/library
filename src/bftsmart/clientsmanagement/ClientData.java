@@ -116,16 +116,26 @@ public class ClientData {
     }
 
 
-    public void setLastMessageReceived(int lastMessageReceived) {
-        this.lastMessageReceived = lastMessageReceived;
+//    public void setLastMessageReceived(int lastMessageReceived) {
+//        this.lastMessageReceived = lastMessageReceived;
+//    }
+
+    public void setLastMessageReceived(int lastMessageReceived, boolean isSpeculative) {
+        if(isSpeculative)
+            this.lastSpecMessageReceived = lastMessageReceived;
+        else
+            this.lastRegMessageReceived = lastMessageReceived;
     }
 
 
+//    public int getLastMessageReceived() {
+//        return lastMessageReceived;
+//    }
 
-
-    public int getLastMessageReceived() {
-        return lastMessageReceived;
+    public int getLastMessageReceived(boolean isSpeculative) {
+        return isSpeculative ? lastSpecMessageReceived : lastRegMessageReceived;
     }
+
 
     public void setLastMessageReceivedTime(long lastMessageReceivedTime) {
         this.lastMessageReceivedTime = lastMessageReceivedTime;
