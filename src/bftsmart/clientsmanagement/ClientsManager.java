@@ -387,13 +387,12 @@ public class ClientsManager {
         
         //Is this a leader replay attack?
         if (!fromClient && clientData.getSession() == request.getSession() &&
-                ((request.isSpeculative() && clientData.getLastSpecMessageDelivered() >= request.getSequence()) ||
-                 (!request.isSpeculative() && clientData.getLastRegMessageDelivered() >= request.getSequence()))) {
+                clientData.getLastMessageDelivered(request.isSpeculative()) >= request.getSequence()) {
 //            if (!fromClient && clientData.getSession() == request.getSession() &&
 //                    clientData.getLastMessageDelivered() >= request.getSequence()) {
             clientData.clientLock.unlock();
             logger.warn("Detected a leader replay attack, rejecting request");
-            logger.debug("lastmsgdelivered: {}  request sequence: {}", clientData.getLastMessageDelivered(), request.getSequence());
+            logger.debug("lastmsgdelivered: {}  request sequence: {}", clientData.getLastMessageDelivered(request.isSpeculative()), request.getSequence());
             return false;
         }
 
@@ -428,9 +427,13 @@ public class ClientsManager {
         if (clientData.getSession() != request.getSession()) {
             clientData.setSession(request.getSession());
             clientData.setLastMessageReceived(-1);
-            clientData.setLastMessageDelivered(-1);
-            clientData.setLastSpecMessageDelivered(-1);
-            clientData.setLastRegMessageDelivered(-1);
+
+//            clientData.setLastMessageDelivered(-1);
+//            clientData.setLastSpecMessageDelivered(-1);
+//            clientData.setLastRegMessageDelivered(-1);
+            clientData.setLastMessageDelivered(-1, false);
+            clientData.setLastMessageDelivered(-1, true);
+
             clientData.getOrderedRequests().clear();
             clientData.getPendingRequests().clear();
         }
