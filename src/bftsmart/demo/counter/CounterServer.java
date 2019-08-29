@@ -29,6 +29,7 @@ import java.io.ObjectInput;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 
 /**
  * Example replica that implements a BFT replicated service (a counter).
@@ -42,6 +43,8 @@ public final class CounterServer extends DefaultSingleRecoverable  {
     
     private int counter = 0;
     private int iterations = 0;
+
+    private ArrayList<Integer> seenTxns = new ArrayList<>();
     
     public CounterServer(int id) {
         //for now, only last node is byzantine
@@ -70,13 +73,20 @@ public final class CounterServer extends DefaultSingleRecoverable  {
   
     @Override
     public byte[] appExecuteOrdered(byte[] command, MessageContext msgCtx) {
+        int hashcode = msgCtx.getFirstInBatch().hashCode();
+        System.out.println("Request hash: " + hashcode + " is speculative: " + msgCtx.getFirstInBatch().isSpeculative());
+
         iterations++;
         try {
-            int increment = new DataInputStream(new ByteArrayInputStream(command)).readInt();
-            counter += increment;
-            
-            System.out.println("(" + iterations + ") Counter was incremented. Current value = " + counter);
-            
+            if(!seenTxns.contains(hashcode)) {
+                int increment = new DataInputStream(new ByteArrayInputStream(command)).readInt();
+                counter += increment;
+                System.out.println("(" + iterations + ") Counter was incremented. Current value = " + counter);
+                seenTxns.add(hashcode);
+            }else{
+                System.out.println("Request was already seen before");
+            }
+
             ByteArrayOutputStream out = new ByteArrayOutputStream(4);
             new DataOutputStream(out).writeInt(counter);
             return out.toByteArray();
