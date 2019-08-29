@@ -42,6 +42,8 @@ public class ClientData {
     private long lastMessageReceivedTime = 0;
 
     private int lastMessageDelivered = -1;
+    private int lastSpecMessageDelivered = -1;
+    private int lastRegMessageDelivered = -1;
 
     private RequestList pendingRequests = new RequestList();
     private RequestList pendingSpeculativeRequests = new RequestList();
@@ -100,9 +102,41 @@ public class ClientData {
         this.lastMessageDelivered = lastMessageDelivered;
     }
 
+    public void setLastMessageDelivered(int lastMessageDelivered, boolean isSpeculative) {
+        if(isSpeculative)
+            this.lastSpecMessageDelivered = lastMessageDelivered;
+        else
+            this.lastRegMessageDelivered = lastMessageDelivered;
+    }
+
     public int getLastMessageDelivered() {
         return lastMessageDelivered;
     }
+
+    public int getLastMessageDelivered(boolean isSpeculative) {
+        if(isSpeculative)
+            return lastSpecMessageDelivered;
+        else
+            return lastRegMessageDelivered;
+    }
+
+    public void setLastSpecMessageDelivered(int lastSpecMessageDelivered) {
+        this.lastSpecMessageDelivered = lastSpecMessageDelivered;
+    }
+
+    public int getLastSpecMessageDelivered() {
+        return lastSpecMessageDelivered;
+    }
+
+    public void setLastRegMessageDelivered(int lastRegMessageDelivered) {
+        this.lastRegMessageDelivered = lastRegMessageDelivered;
+    }
+
+    public int getLastRegMessageDelivered() {
+        return lastRegMessageDelivered;
+    }
+
+
 
     public void setLastMessageReceived(int lastMessageReceived) {
         this.lastMessageReceived = lastMessageReceived;

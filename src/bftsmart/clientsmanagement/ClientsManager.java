@@ -196,7 +196,8 @@ public class ClientsManager {
                     if (request != null) {
                         if(!request.alreadyProposed) {
 
-                            logger.debug("Selected request with sequence number {} from client {}", request.getSequence(), request.getSender());
+                            logger.debug("Selected request {} with sequence number {} from client {}",
+                                    request.hashCode(), request.getSequence(), request.getSender());
 
                             //this client have pending message
                             request.alreadyProposed = true;
@@ -386,10 +387,13 @@ public class ClientsManager {
         
         //Is this a leader replay attack?
         if (!fromClient && clientData.getSession() == request.getSession() &&
-                clientData.getLastMessageDelivered() >= request.getSequence()) {
-            
+                ((request.isSpeculative() && clientData.getLastSpecMessageDelivered() >= request.getSequence()) ||
+                 (!request.isSpeculative() && clientData.getLastRegMessageDelivered() >= request.getSequence()))) {
+//            if (!fromClient && clientData.getSession() == request.getSession() &&
+//                    clientData.getLastMessageDelivered() >= request.getSequence()) {
             clientData.clientLock.unlock();
             logger.warn("Detected a leader replay attack, rejecting request");
+            logger.debug("lastmsgdelivered: {}  request sequence: {}", clientData.getLastMessageDelivered(), request.getSequence());
             return false;
         }
 
@@ -425,6 +429,8 @@ public class ClientsManager {
             clientData.setSession(request.getSession());
             clientData.setLastMessageReceived(-1);
             clientData.setLastMessageDelivered(-1);
+            clientData.setLastSpecMessageDelivered(-1);
+            clientData.setLastRegMessageDelivered(-1);
             clientData.getOrderedRequests().clear();
             clientData.getPendingRequests().clear();
         }
@@ -574,7 +580,7 @@ public class ClientsManager {
         if (!clientData.removeOrderedRequest(request)) {
             logger.debug("Request " + request + " does not exist in pending requests");
         }
-        clientData.setLastMessageDelivered(request.getSequence());
+        clientData.setLastMessageDelivered(request.getSequence(), request.isSpeculative());
 
         /******* END CLIENTDATA CRITICAL SECTION ******/
         clientData.clientLock.unlock();

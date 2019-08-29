@@ -239,6 +239,7 @@ public class ServiceProxy extends TOMSender {
                 
 		canSendLock.lock();
 
+		logger.debug("INVOKE called");
 		// Clean all statefull data to prepare for receiving next replies
 		Arrays.fill(replies, null);
 		receivedReplies = 0;

@@ -40,6 +40,7 @@
    <logger name="bftsmart.tom.ServiceProxy" level="DEBUG"></logger>
    <logger name="bftsmart.tom.DeliveryThread" level="DEBUG"></logger>
    <logger name="bftsmart.tom.core.TOMLayer" level="DEBUG"></logger>
+   <logger name="bftsmart.tom.core.Synchronizer" level="DEBUG"></logger>
    <logger name="bftsmart.tom.core.ExecutionManager" level="DEBUG"></logger>
    <logger name="bftsmart.communication.server.ServerConnection" level="TRACE"></logger>
    <logger name="bftsmart.communication.server.ServerCommunicationSystem" level="DEBUG"></logger>

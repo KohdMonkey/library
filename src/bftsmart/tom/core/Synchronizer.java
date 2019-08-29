@@ -114,6 +114,7 @@ public class Synchronizer {
      * didn't manage to
      */
     public void triggerTimeout(List<TOMMessage> requestList) {
+        logger.debug("[Synchronizer] timeout triggered");
 
         ObjectOutputStream out = null;
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -439,7 +440,7 @@ public class Synchronizer {
     }
     // this method is called when a timeout occurs or when a STOP message is recevied
     private void startSynchronization(int nextReg) {
-
+        logger.debug("[Synchronizer] initializing sync phase");
         boolean condition;
         ObjectOutputStream out = null;
         ByteArrayOutputStream bos = null;
