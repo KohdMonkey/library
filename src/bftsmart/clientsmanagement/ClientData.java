@@ -128,9 +128,9 @@ public class ClientData {
     }
 
 
-//    public int getLastMessageReceived() {
-//        return lastMessageReceived;
-//    }
+    public int getLastMessageReceived() {
+        return lastSpecMessageReceived > lastRegMessageReceived ? lastSpecMessageReceived : lastRegMessageReceived;
+    }
 
     public int getLastMessageReceived(boolean isSpeculative) {
         return isSpeculative ? lastSpecMessageReceived : lastRegMessageReceived;

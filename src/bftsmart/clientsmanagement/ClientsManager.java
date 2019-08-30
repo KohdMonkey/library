@@ -384,7 +384,12 @@ public class ClientsManager {
         ClientData clientData = getClientData(clientId);
         
         clientData.clientLock.lock();
-        
+        logger.debug("[ClientsManager] speculative: " + request.isSpeculative());
+        logger.debug("[ClientsManager] isfrontclient: {}", fromClient);
+        logger.debug("[ClientsManager] lastmessagereceived: {}", clientData.getLastMessageReceived(request.isSpeculative()));
+        logger.debug("[ClientsManager] request sequence number: {}", request.getSequence());
+        logger.debug("[ClientsManager] last message delivered: {}", clientData.getLastMessageDelivered(request.isSpeculative()));
+
         //Is this a leader replay attack?
         if (!fromClient && clientData.getSession() == request.getSession() &&
                 clientData.getLastMessageDelivered(request.isSpeculative()) >= request.getSequence()) {
@@ -398,7 +403,7 @@ public class ClientsManager {
 
         request.receptionTime = receptionTime;
         request.receptionTimestamp = receptionTimestamp;
-        logger.debug("[ClientsManager] speculative: " + request.isSpeculative());
+
 
         //if it is a new speculative txn
         if(request.isSpeculative() && !specTxns.contains(request.hashCode()))
@@ -438,8 +443,7 @@ public class ClientsManager {
             clientData.getOrderedRequests().clear();
             clientData.getPendingRequests().clear();
         }
-        logger.debug("[ClientsManager] lastmessagereceived: {}", clientData.getLastMessageReceived(request.isSpeculative()));
-        logger.debug("[ClientsManager] request sequence number: {}", request.getSequence());
+
 
 //        if ((clientData.getLastMessageReceived() == -1) || //first message received or new session (see above)
 //                (request.isSpeculative() && (clientData.getLastMessageReceived() + 1 == request.getSequence())) ||
@@ -448,11 +452,21 @@ public class ClientsManager {
 //                        && (clientData.getLastMessageReceived() == request.getSequence())) || //message received is the expected
 //                ((request.getSequence() > clientData.getLastMessageReceived()) && !fromClient)) {
 //
-            if ((clientData.getLastMessageReceived(request.isSpeculative()) == -1) || //first message received or new session (see above)
-                    (clientData.getLastMessageReceived(request.isSpeculative()) + 1 == request.getSequence()) || //message received is the expected
-                    ((request.getSequence() > clientData.getLastMessageReceived(request.isSpeculative())) && !fromClient)) {
+//            if ((clientData.getLastMessageReceived(request.isSpeculative()) == -1) || //first message received or new session (see above)
+//                    (request.isSpeculative() && clientData.getLastMessageReceived() + 1 == request.getSequence()) ||
+//                    (!request.isSpeculative() && clientData.getLastMessageReceived() == request.getSequence()) ||//message received is the expected
+//                    ((request.getSequence() > clientData.getLastMessageReceived(request.isSpeculative())) && !fromClient)) {
 
-            //enforce the "external validity" property, i.e, verify if the
+         logger.debug("[ClientsManager] lastSpecMsgReceived: {}", clientData.getLastMessageReceived(true));
+         if ((clientData.getLastMessageReceived(request.isSpeculative()) == -1) || //first message received or new session (see above)
+             (!request.isSpeculative() && specTxns.contains(request.hashCode()) && clientData.getLastMessageReceived(true) == request.getSequence())||
+             (clientData.getLastMessageReceived(true) + 1 == request.getSequence()) || //message received is the expected
+             ((request.getSequence() > clientData.getLastMessageReceived(request.isSpeculative())) && !fromClient)) {
+
+             if(specTxns.contains(request.hashCode()))
+                specTxns.remove((Integer)request.hashCode());
+
+                    //enforce the "external validity" property, i.e, verify if the
             //requests are valid in accordance to the application semantics
             //and not an erroneous requests sent by a Byzantine leader.
             boolean isValid = (!controller.getStaticConf().isBFT() || verifier.isValidRequest(request));
@@ -514,7 +528,7 @@ public class ClientsManager {
             }
         } else {
             //I will not put this message on the pending requests list
-            if (clientData.getLastMessageReceived(request.isSpeculative()) >= request.getSequence()) {
+            if (clientData.getLastMessageReceived(true) >= request.getSequence()) {
                 //I already have/had this message
                 logger.debug("[ClientsManager]request already processed");
                 

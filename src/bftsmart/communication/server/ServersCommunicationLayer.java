@@ -327,7 +327,7 @@ public class ServersCommunicationLayer extends Thread {
             ConsensusMessage m = (ConsensusMessage)sm;
             //only withhold speculative messages for now
             if(m.getType() == MessageFactory.EXECUTE) {
-                if(((messagesSent+1) % 3) == 0) {
+                if(((messagesSent+1) % 5) == 0) {
                     logger.debug("[ServerCommSystem] Leader withholding speculative message after {} messages", messagesSent);
                     for (int target : targetsShuffled) {
                         try {
