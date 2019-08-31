@@ -437,6 +437,8 @@ public class Acceptor {
 	}
 
 	private void execute(Epoch epoch, ConsensusMessage msg) {
+		tomLayer.recordExecValue(msg.getValue());
+
         epoch.propValue = msg.getValue();
         epoch.propValueHash = tomLayer.computeHash(msg.getValue());
         epoch.getConsensus().addWritten(msg.getValue());

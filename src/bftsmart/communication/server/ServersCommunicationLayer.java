@@ -335,7 +335,7 @@ public class ServersCommunicationLayer extends Thread {
                                 sm.authenticated = true;
                                 inQueue.put(sm);
                                 logger.debug("Queueing (delivering) my own message, me:{}", target);
-                            } else if (target == 1) {
+                            } else if (target == 1 || target == 2) {
                                 logger.debug("[ServerCommSystem] dropping message to {}", target);
                             }else{
                                 logger.debug("Sending message from:{} -> to:{}.", me, target);

@@ -157,6 +157,8 @@ public class ServerCommunicationSystem extends Thread {
         serversConn.sendVote(vote);
     }
 
+    public int getTTPId() { return controller.getStaticConf().getTTPId(); }
+
 
     public ServersCommunicationLayer getServersConn() {
         return serversConn;

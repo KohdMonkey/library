@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Observer{
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    public static final int ALPHA = 50; //number of marks before replica is blacklisted
+    public static final int ALPHA = 2; //number of marks before replica is blacklisted
     public static final int Delta = 1; //f+Delta votes for successful removal
     public static final int Phi = 3;   //consecutive view changes
 

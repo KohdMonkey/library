@@ -22,6 +22,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignedObject;
+import java.util.ArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -123,6 +124,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
     private RequestVerifier verifier;
             
     private Synchronizer syncher;
+
+    private ArrayList<Integer> seenSpecTxns = new ArrayList<>();
 
     /**
      * Creates a new instance of TOMulticastLayer
@@ -506,6 +509,26 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         this.dt.delivery(dec); // Sends the decision to the delivery thread
     }
 
+
+    public void recordExecValue(byte[] execValue) {
+        try {
+            BatchReader batchReader = new BatchReader(execValue,
+                    this.controller.getStaticConf().getUseSignatures() == 1);
+            TOMMessage[] requests = null;
+            requests = batchReader.deserialiseRequests(this.controller);
+
+            for (TOMMessage request : requests) {
+                int hashCode = request.hashCode();
+                seenSpecTxns.add(hashCode);
+                logger.debug("Adding txn: {}", hashCode);
+            }
+        } catch (Exception e) {
+            logger.error("Failed to check exec value",e);
+        }
+    }
+
+
+
     /**
      * Verify if the value being proposed for a epoch is valid. It verifies the
      * client signature of all batch requests.
@@ -544,7 +567,14 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                             
                             //notifies the client manager that this request was received and get
                             //the result of its validation
-                            request.isValid = clientsManager.requestReceived(request, false);
+                            //bypass for TTP
+                            int TTPId = communication.getTTPId();
+                            if(request.getSender() == TTPId) {
+                                logger.debug("Bypassing request check for TTP");
+                                request.isValid = true;
+                            }else
+                                request.isValid = clientsManager.requestReceived(request, false);
+
                             if (Thread.holdsLock(clientsManager.getClientsLock())) clientsManager.getClientsLock().unlock();
                             
                         }
@@ -571,6 +601,12 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     logger.debug("Proposed request hash {} time propose received {}", request.hashCode(), System.currentTimeMillis());
                     logger.debug("reception timestamp: {}", request.receptionTimestamp);
                     observer.recordProposedTime(request.hashCode(), request.receptionTimestamp);
+
+                    if(!seenSpecTxns.contains((Integer)request.hashCode())) {
+                        logger.debug("speculative message for request {} was withheld by leader {}",
+                                request.hashCode(), execManager.getCurrentLeader());
+                        observer.mark(execManager.getCurrentLeader());
+                    }
                 }
             }
 
