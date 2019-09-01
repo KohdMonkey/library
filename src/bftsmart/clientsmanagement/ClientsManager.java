@@ -460,7 +460,8 @@ public class ClientsManager {
          logger.debug("[ClientsManager] lastSpecMsgReceived: {}", clientData.getLastMessageReceived(true));
          if ((clientData.getLastMessageReceived(request.isSpeculative()) == -1) || //first message received or new session (see above)
              (!request.isSpeculative() && specTxns.contains(request.hashCode()) && clientData.getLastMessageReceived(true) == request.getSequence())||
-             (clientData.getLastMessageReceived(true) + 1 == request.getSequence()) || //message received is the expected
+             (clientData.getLastMessageReceived(request.isSpeculative()) + 1 == request.getSequence()) || //message received is the expected
+//             (request.getSender() == controller.getStaticConf().getTTPId() && clientData.getLastMessageReceived(false) + 1 == request.getSequence() && fromClient)||
              ((request.getSequence() > clientData.getLastMessageReceived(request.isSpeculative())) && !fromClient)) {
 
              if(specTxns.contains(request.hashCode()))

@@ -42,7 +42,7 @@ public class Reconfiguration {
     public void connect(){
         if(proxy == null){
             System.out.println("[Reconfiguration] Creating new Service proxy");
-        	proxy = new ServiceProxy(id, configDir, null, null, keyLoader);
+        	proxy = new ServiceProxy(id, configDir, null, null, keyLoader, true);
         }
     }
     

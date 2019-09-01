@@ -66,6 +66,7 @@ public class ServiceProxy extends TOMSender {
 	private HashResponseController hashResponseController;
 	private int invokeUnorderedHashedTimeout = 10;
 
+	private boolean isTTP = false; //is this a proxy for the client
 	private boolean testSpeculative;
 	private boolean speculative = false;
 	private long time;
@@ -137,7 +138,15 @@ public class ServiceProxy extends TOMSender {
 		};
 	}
 
-	/**
+    public ServiceProxy(int processId, String configHome,
+                        Comparator<byte[]> replyComparator, Extractor replyExtractor,
+                        KeyLoader loader, boolean isTTP) {
+        this(processId, configHome, replyComparator, replyExtractor, loader);
+        this.isTTP = isTTP;
+    }
+
+
+    /**
 	 * Get the amount of time (in seconds) that this proxy will wait for
 	 * servers replies before returning null.
 	 *
@@ -249,7 +258,7 @@ public class ServiceProxy extends TOMSender {
 		// Send the request to the replicas, and get its ID
 
 		//generate new IDs only for speculative requests
-		if(speculative) {
+		if(speculative || isTTP) {
 			reqId = generateRequestId(reqType);
 			operationId = generateOperationId();
 			logger.debug("[ServiceProxy] reqId: {}  operationId: {}", reqId, operationId);
