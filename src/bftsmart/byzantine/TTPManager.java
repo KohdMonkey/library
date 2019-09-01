@@ -135,21 +135,21 @@ public class TTPManager {
             if((vote & (1 << i)) == 1) {
                 currentVoteRound[i]++;
                 logger.debug("vote against {} total: {}", i, currentVoteRound[i]);
-                if(currentVoteRound[i] > controller.getStaticConf().getF()) {
+                if(currentVoteRound[i] >= controller.getStaticConf().getF()) {
                     //if to remove is leader, then vc first
                     if(currentLeader == i) {
                         viewManager.viewChange(currentVoteNum);
                         viewManager.executeVC();
                         logger.debug("[TTPManager] done view change");
                     }
-                    Server newServer = servers.get(0);
-                    if(newServer == null) {
-                        logger.debug("[TTPManager] no replacement server");
-                    }else{
-                        viewManager.replaceServer(newServer.getId(), newServer.getIp(), newServer.getPort(),
-                                                  newServer.getPortRR(), i);
-                        viewManager.executeUpdates();
-                    }
+//                    Server newServer = servers.get(0);
+//                    if(newServer == null) {
+//                        logger.debug("[TTPManager] no replacement server");
+//                    }else{
+//                        viewManager.replaceServer(newServer.getId(), newServer.getIp(), newServer.getPort(),
+//                                                  newServer.getPortRR(), i);
+//                        viewManager.executeUpdates();
+//                    }
                     //temporary hack to reset
                     currentVoteRound[i] = -100;
                     currentVoteNum++;

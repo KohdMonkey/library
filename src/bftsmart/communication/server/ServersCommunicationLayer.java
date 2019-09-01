@@ -327,7 +327,7 @@ public class ServersCommunicationLayer extends Thread {
             ConsensusMessage m = (ConsensusMessage)sm;
             //only withhold speculative messages for now
             if(m.getType() == MessageFactory.EXECUTE) {
-                if(((messagesSent+1) % 5) == 0) {
+                if(((messagesSent+1) % 1) == 0) {
                     logger.debug("[ServerCommSystem] Leader withholding speculative message after {} messages", messagesSent);
                     for (int target : targetsShuffled) {
                         try {
@@ -335,7 +335,7 @@ public class ServersCommunicationLayer extends Thread {
                                 sm.authenticated = true;
                                 inQueue.put(sm);
                                 logger.debug("Queueing (delivering) my own message, me:{}", target);
-                            } else if (target == 1 || target == 2) {
+                            } else if (target == 1) {
                                 logger.debug("[ServerCommSystem] dropping message to {}", target);
                             }else{
                                 logger.debug("Sending message from:{} -> to:{}.", me, target);

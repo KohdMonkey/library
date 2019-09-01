@@ -517,7 +517,7 @@ public class ClientsManager {
 
                 //create a timer for this message
                 //Tuan - only watch non-speculative requests
-                if (!request.isSpeculative() && timer != null) {
+                if (!request.isSpeculative() && timer != null && request.getSender() != controller.getStaticConf().getTTPId()) {
                     logger.debug("[ClientsManager] watching request: " + request.getId());
                     timer.watch(request);
                 }
@@ -529,7 +529,7 @@ public class ClientsManager {
             }
         } else {
             //I will not put this message on the pending requests list
-            if (clientData.getLastMessageReceived(true) >= request.getSequence()) {
+            if (clientData.getLastMessageReceived(request.isSpeculative()) >= request.getSequence()) {
                 //I already have/had this message
                 logger.debug("[ClientsManager]request already processed");
                 

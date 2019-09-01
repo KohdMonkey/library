@@ -598,14 +598,15 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                         logger.warn("Request {} could not be added to the pending messages queue of its respective client", request);
                         return null;
                     }
-                    logger.debug("Proposed request hash {} time propose received {}", request.hashCode(), System.currentTimeMillis());
-                    logger.debug("reception timestamp: {}", request.receptionTimestamp);
-                    observer.recordProposedTime(request.hashCode(), request.receptionTimestamp);
+//                    logger.debug("Proposed request hash {} time propose received {}", request.hashCode(), System.currentTimeMillis());
+//                    logger.debug("reception timestamp: {}", request.receptionTimestamp);
+                    //for recording delay
+//                    observer.recordProposedTime(request.hashCode(), request.receptionTimestamp);
 
-                    if(!seenSpecTxns.contains((Integer)request.hashCode())) {
+                    if(!seenSpecTxns.contains((Integer)request.hashCode()) && request.getSender() != communication.getTTPId()) {
                         logger.debug("speculative message for request {} was withheld by leader {}",
                                 request.hashCode(), execManager.getCurrentLeader());
-//                        observer.mark(execManager.getCurrentLeader());
+                        observer.mark(execManager.getCurrentLeader());
                     }
                 }
             }
