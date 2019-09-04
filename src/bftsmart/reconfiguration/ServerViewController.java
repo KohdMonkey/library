@@ -252,40 +252,40 @@ public class ServerViewController extends ViewController {
 //            tomLayer.requestsTimer.stopTimer();
 //            tomLayer.requestsTimer.setShortTimeout(3000);
 //            tomLayer.requestsTimer.startTimer();
-            //tomLayer.triggerTimeout(new LinkedList<TOMMessage>());
-            int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
-            this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
-            int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
-
-            ObjectOutputStream out = null;
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            byte[] payload;
-            try { // serialize content to send in STOP message
-                out = new ObjectOutputStream(bos);
-                out.writeBoolean(false);
-
-                out.flush();
-                bos.flush();
-
-                payload = bos.toByteArray();
-
-                out.close();
-                bos.close();
-
-                logger.debug("[ServerViewController] sending LCMessage");
-                LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
-                this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
-
-            } catch (IOException ex) {
-                logger.error("Could not serialize STOP message", ex);
-            } finally {
-                try {
-                    out.close();
-                    bos.close();
-                } catch (IOException ex) {
-                    logger.error("Could not serialize STOP message", ex);
-                }
-            }
+            tomLayer.getSynchronizer().triggerTimeout(new LinkedList<TOMMessage>());
+//            int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
+//            this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
+//            int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
+//
+//            ObjectOutputStream out = null;
+//            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+//            byte[] payload;
+//            try { // serialize content to send in STOP message
+//                out = new ObjectOutputStream(bos);
+//                out.writeBoolean(false);
+//
+//                out.flush();
+//                bos.flush();
+//
+//                payload = bos.toByteArray();
+//
+//                out.close();
+//                bos.close();
+//
+//                logger.debug("[ServerViewController] sending LCMessage");
+//                LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
+//                this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
+//
+//            } catch (IOException ex) {
+//                logger.error("Could not serialize STOP message", ex);
+//            } finally {
+//                try {
+//                    out.close();
+//                    bos.close();
+//                } catch (IOException ex) {
+//                    logger.error("Could not serialize STOP message", ex);
+//                }
+//            }
 
         } //end forceLC
         return TOMUtil.getBytes(new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
