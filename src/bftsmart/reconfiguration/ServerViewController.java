@@ -141,7 +141,7 @@ public class ServerViewController extends ViewController {
         List<Integer> jSet = new LinkedList<>();
         List<Integer> rSet = new LinkedList<>();
         int f = -1;
-
+        int nextLeader = 1;
         List<String> jSetInfo = new LinkedList<>();
         boolean forceLC = false;
 
@@ -184,13 +184,14 @@ public class ServerViewController extends ViewController {
                 } else if (key == CHANGE_F) {
                     f = Integer.parseInt(value);
                 } else if(key == VIEW_CHANGE) {
+                    nextLeader = Integer.parseInt(value);
                     logger.debug("[ServerViewController] view change message received!");
                     forceLC = true;
                 }
             }
 
         }
-        return reconfigure(jSetInfo, jSet, rSet, f, cid, forceLC);
+        return reconfigure(jSetInfo, jSet, rSet, f, cid, forceLC, nextLeader);
     }
 
     private boolean contains(int id, List<Integer> list) {
@@ -202,7 +203,7 @@ public class ServerViewController extends ViewController {
         return false;
     }
 
-    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid, boolean forceLC) {
+    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid, boolean forceLC, int nextLeader) {
         lastJoinStet = new int[jSet.size()];
         int[] nextV = new int[currentView.getN() + jSet.size() - rSet.size()];
         int p = 0;
@@ -283,7 +284,7 @@ public class ServerViewController extends ViewController {
                     logger.error("Could not serialize STOP message", ex);
                 }
             }
-            tomLayer.execManager.setNewLeader(1); //need to fix
+            tomLayer.execManager.setNewLeader(nextLeader); //need to fix
             logger.debug("Returning new view: {} cid {} currentLeader {} regency{} ",
                     newV.getProcesses(), cid, tomLayer.execManager.getCurrentLeader(), regency);
         } //end forceLC

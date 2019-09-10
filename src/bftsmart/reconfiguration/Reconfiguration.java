@@ -60,6 +60,7 @@ public class Reconfiguration {
     }
 
     public void replaceServer(int id, String ip, int port, int portRR, int removeId) {
+
         this.setReconfiguration(
                 ServerViewController.REPLACE_SERVER,
                 id + ":" +
@@ -70,11 +71,13 @@ public class Reconfiguration {
     }
 
 
-    public void viewChange() {
-        this.setReconfiguration(ServerViewController.VIEW_CHANGE, "");
+    public void viewChange(int nextLeader) {
+        this.setReconfiguration(ServerViewController.VIEW_CHANGE, String.valueOf(nextLeader));
     }
 
     public void setVoteNum(int voteNum) { request.setCurrentVoteNum(voteNum); }
+
+
 
     public void setF(int f){
       this.setReconfiguration(ServerViewController.CHANGE_F,String.valueOf(f));  

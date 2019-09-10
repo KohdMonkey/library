@@ -116,14 +116,15 @@ public class ViewManager {
 
     public void replaceServer(int id, String ip, int port, int portRR, int removeId) {
         logger.debug("[ViewManager] replace server");
+
         this.controller.getStaticConf().addHostInfo(id, ip, port, portRR);
         addIds.add(id);
         rec.replaceServer(id, ip, port, portRR, removeId);
     }
 
-    public void viewChange(int voteNum) {
+    public void viewChange(int voteNum, int currentLeader) {
 //        controller.getTomLayer().getSynchronizer().
-        rec.viewChange();
+        rec.viewChange(currentLeader);
         rec.setVoteNum(voteNum);
     }
 

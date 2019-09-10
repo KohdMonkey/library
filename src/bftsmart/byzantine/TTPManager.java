@@ -138,7 +138,8 @@ public class TTPManager {
                 if(currentVoteRound[i] >= controller.getStaticConf().getF()) {
                     //if to remove is leader, then vc first
                     if(currentLeader == i) {
-                        viewManager.viewChange(currentVoteNum);
+                        currentLeader++; //NEED TO GET NEW LEADER FROM REPLIES
+                        viewManager.viewChange(currentVoteNum, currentLeader);
                         viewManager.executeVC();
                         logger.debug("[TTPManager] done view change");
                     }
