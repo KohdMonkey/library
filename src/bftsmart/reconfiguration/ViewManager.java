@@ -122,6 +122,7 @@ public class ViewManager {
     }
 
     public void viewChange(int voteNum) {
+//        controller.getTomLayer().getSynchronizer().
         rec.viewChange();
         rec.setVoteNum(voteNum);
     }

@@ -284,6 +284,7 @@ public class NettyClientServerCommunicationSystemServerSide extends SimpleChanne
 			logger.debug("SessionReplicaToClient: Key:{}, Value:{}", cli, sessionReplicaToClient.get(cli));
 		}
 
+
 		logger.debug("Removing client channel with ID = " + key);
 		sessionReplicaToClient.remove(key);
 

@@ -105,6 +105,9 @@ public class Synchronizer {
     public LCManager getLCManager() {
         return lcManager;
     }
+
+
+
     
     /**
      * This method is called when there is a timeout and the request has already
@@ -194,6 +197,43 @@ public class Synchronizer {
         startSynchronization(regency); // evaluate STOP messages
                 
     }
+
+    public void forceVC(int regency) {
+        //stop consensus execution
+        logger.debug("Stopping consensus execution");
+        if (!execManager.stopped()) execManager.stop();
+        lcManager.setLastReg(regency);
+        lcManager.setNextReg(regency);
+
+        lcManager.removeStops(regency);
+        lcManager.clearCurrentRequestTimedOut();
+        lcManager.clearRequestsFromSTOP();
+
+        requestsTimer.stopTimer();
+        requestsTimer.Enabled(false);
+
+
+        int leader = lcManager.getNewLeader();
+        execManager.setNewLeader(leader);
+
+        requestsTimer.Enabled(true);
+        requestsTimer.setShortTimeout(-1);
+        requestsTimer.startTimer();
+
+
+        // resume normal operation
+        execManager.restart();
+
+        //leaderChanged = true;
+        boolean iAmLeader = execManager.getCurrentLeader() == this.controller.getStaticConf().getProcessId();
+        tom.setInExec(-1);
+        if (iAmLeader) {
+            logger.debug("Waking up proposer thread");
+            tom.imAmTheLeader();
+        }
+
+    }
+
 
     // Processes STOP messages that were not process upon reception, because they were
     // ahead of the replica's expected regency

@@ -143,7 +143,6 @@ public class ServerViewController extends ViewController {
         int f = -1;
         
         List<String> jSetInfo = new LinkedList<>();
-        boolean forceLC = false;
         
         for (int i = 0; i < updates.size(); i++) {
             ReconfigureRequest request = (ReconfigureRequest) TOMUtil.getObject(updates.get(i).getContent());
@@ -188,13 +187,17 @@ public class ServerViewController extends ViewController {
                     f = Integer.parseInt(value);
                 } else if(key == VIEW_CHANGE) {
                     logger.debug("[ServerViewController] view change message received!");
-                    forceLC = true;
+                    return viewChange();
                 }
             }
 
         }
-        return reconfigure(jSetInfo, jSet, rSet, f, cid, forceLC);
+
+        return reconfigure(jSetInfo, jSet, rSet, f, cid);
     }
+
+
+
 
     private boolean contains(int id, List<Integer> list) {
         for (int i = 0; i < list.size(); i++) {
@@ -205,7 +208,59 @@ public class ServerViewController extends ViewController {
         return false;
     }
 
-    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid, boolean forceLC) {
+    private byte[] viewChange() {
+//        this.tomLayer.getSynchronizer().triggerTimeout(new ArrayList<>());
+        int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
+                this.tomLayer.getSynchronizer().getLCManager().setNextReg(1);
+//        this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
+        int regency = 1;
+//        int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
+        logger.debug("Sending stop for regency {}", regency);
+
+        ObjectOutputStream out = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte[] payload;
+        try { // serialize content to send in STOP message
+            out = new ObjectOutputStream(bos);
+            out.writeBoolean(false);
+
+            out.flush();
+            bos.flush();
+
+            payload = bos.toByteArray();
+
+            out.close();
+            bos.close();
+
+            logger.debug("[ServerViewController] sending LCMessage to {}", this.getCurrentViewOtherAcceptors());
+            LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
+            this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
+
+        } catch (IOException ex) {
+            logger.error("Could not serialize STOP message", ex);
+        } finally {
+            try {
+                out.close();
+                bos.close();
+            } catch (IOException ex) {
+                logger.error("Could not serialize STOP message", ex);
+            }
+        }
+        this.tomLayer.getSynchronizer().removeSTOPretransmissions(regency-1);
+        this.tomLayer.getSynchronizer().removeSTOPretransmissions(regency-1);
+        return TOMUtil.getBytes(true);
+    }
+//
+//    public byte[] viewChange() {
+//        int regency = 1;
+//        this.tomLayer.getSynchronizer().forceVC(regency);
+//
+//        return TOMUtil.getBytes(true);
+//    }
+
+
+
+    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid) {
         lastJoinStet = new int[jSet.size()];
         int[] nextV = new int[currentView.getN() + jSet.size() - rSet.size()];
         int p = 0;
@@ -220,7 +275,6 @@ public class ServerViewController extends ViewController {
                 nextV[p++] = currentView.getProcesses()[i];
             } else if (tomLayer.execManager.getCurrentLeader() == currentView.getProcesses()[i]) {
                 logger.debug("[ServerViewController] Forcing leader change");
-                forceLC = true;
  
             }
         }
@@ -244,52 +298,12 @@ public class ServerViewController extends ViewController {
         //TODO:Remove all information stored about each process in rSet
         //processes execute the leave!!!
         reconfigureTo(newV);
-        
-        if (forceLC) {
-            
-            //TODO: Reactive it and make it work
-//            logger.info("Shortening LC timeout");
-//            tomLayer.requestsTimer.stopTimer();
-//            tomLayer.requestsTimer.setShortTimeout(3000);
-//            tomLayer.requestsTimer.startTimer();
-            tomLayer.getSynchronizer().triggerTimeout(new LinkedList<TOMMessage>());
-//            int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
-//            this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
-//            int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
-//
-//            ObjectOutputStream out = null;
-//            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-//            byte[] payload;
-//            try { // serialize content to send in STOP message
-//                out = new ObjectOutputStream(bos);
-//                out.writeBoolean(false);
-//
-//                out.flush();
-//                bos.flush();
-//
-//                payload = bos.toByteArray();
-//
-//                out.close();
-//                bos.close();
-//
-//                logger.debug("[ServerViewController] sending LCMessage");
-//                LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
-//                this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
-//
-//            } catch (IOException ex) {
-//                logger.error("Could not serialize STOP message", ex);
-//            } finally {
-//                try {
-//                    out.close();
-//                    bos.close();
-//                } catch (IOException ex) {
-//                    logger.error("Could not serialize STOP message", ex);
-//                }
-//            }
 
-        } //end forceLC
-        return TOMUtil.getBytes(new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
-                 cid, tomLayer.execManager.getCurrentLeader()));
+        ReconfigureReply reply = new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
+                cid, tomLayer.execManager.getCurrentLeader());
+        logger.debug("new view processes: {}", newV.getProcesses());
+        logger.debug("cid: {} new leader: {}", cid, tomLayer.execManager.getCurrentLeader());
+        return TOMUtil.getBytes(reply);
     }
 
     public TOMMessage[] clearUpdates() {
