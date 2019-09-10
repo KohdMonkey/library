@@ -125,12 +125,18 @@ public class LCManager {
             currentLeader++;
             if (currentLeader > maxProc) {
 
-                currentLeader = minProc;    
+                currentLeader = minProc;
             }
         } while(!SVController.isCurrentViewMember(currentLeader));
-        
+
         return currentLeader;
     }
+
+    public int getCurrentLeader() {
+        return currentLeader;
+    }
+
+
     
     /**
      * Informs the object of who is the current leader

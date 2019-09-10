@@ -142,14 +142,14 @@ public class TTPManager {
                         viewManager.executeVC();
                         logger.debug("[TTPManager] done view change");
                     }
-//                    Server newServer = servers.get(0);
-//                    if(newServer == null) {
-//                        logger.debug("[TTPManager] no replacement server");
-//                    }else{
-//                        viewManager.replaceServer(newServer.getId(), newServer.getIp(), newServer.getPort(),
-//                                                  newServer.getPortRR(), i);
-//                        viewManager.executeUpdates();
-//                    }
+                    Server newServer = servers.get(0);
+                    if(newServer == null) {
+                        logger.debug("[TTPManager] no replacement server");
+                    }else{
+                        viewManager.replaceServer(newServer.getId(), newServer.getIp(), newServer.getPort(),
+                                                  newServer.getPortRR(), i);
+                        viewManager.executeUpdates();
+                    }
                     //temporary hack to reset
                     currentVoteRound[i] = -100;
                     currentVoteNum++;

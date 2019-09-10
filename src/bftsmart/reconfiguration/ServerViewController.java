@@ -1,18 +1,18 @@
 /**
-Copyright (c) 2007-2013 Alysson Bessani, Eduardo Alchieri, Paulo Sousa, and the authors indicated in the @author tags
+ Copyright (c) 2007-2013 Alysson Bessani, Eduardo Alchieri, Paulo Sousa, and the authors indicated in the @author tags
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-http://www.apache.org/licenses/LICENSE-2.0
+ http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 package bftsmart.reconfiguration;
 
 import java.io.ByteArrayOutputStream;
@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
  * @author eduardo
  */
 public class ServerViewController extends ViewController {
-    
+
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static final int ADD_SERVER = 0;
@@ -47,16 +47,16 @@ public class ServerViewController extends ViewController {
     public static final int CHANGE_F = 2;
     public static final int VIEW_CHANGE = 3;
     public static final int REPLACE_SERVER = 4;
-    
+
     private int quorumBFT; // ((n + f) / 2) replicas
     private int quorumCFT; // (n / 2) replicas
     private int[] otherProcesses;
     private int[] lastJoinStet;
     private List<TOMMessage> updates = new LinkedList<TOMMessage>();
     private TOMLayer tomLayer;
-   // protected View initialView;
+    // protected View initialView;
     private Observer observer;
-    
+
     public ServerViewController(int procId, KeyLoader loader) {
         this(procId,"", loader);
         /*super(procId);
@@ -70,16 +70,16 @@ public class ServerViewController extends ViewController {
         super(procId, configHome, loader);
         View cv = getViewStore().readView();
         if(cv == null){
-            
+
             logger.info("Creating current view from configuration file");
-            reconfigureTo(new View(0, getStaticConf().getInitialView(), 
-                getStaticConf().getF(), getInitAdddresses()));
+            reconfigureTo(new View(0, getStaticConf().getInitialView(),
+                    getStaticConf().getF(), getInitAdddresses()));
         }else{
             logger.info("Using view stored on disk");
             logger.info("current view: " + Arrays.toString(cv.getProcesses()));
             reconfigureTo(cv);
         }
-       
+
     }
 
     private InetSocketAddress[] getInitAdddresses() {
@@ -92,14 +92,14 @@ public class ServerViewController extends ViewController {
 
         return addresses;
     }
-    
+
     public void setTomLayer(TOMLayer tomLayer) {
         this.tomLayer = tomLayer;
     }
 
     public void setObserver(Observer observer) { this.observer = observer; }
 
-    
+
     public boolean isInCurrentView() {
         return this.currentView.isMember(getStaticConf().getProcessId());
     }
@@ -120,12 +120,12 @@ public class ServerViewController extends ViewController {
 
     public void enqueueUpdate(TOMMessage up) {
         ReconfigureRequest request = (ReconfigureRequest) TOMUtil.getObject(up.getContent());
-        if (request != null && request.getSender() == getStaticConf().getTTPId() 
+        if (request != null && request.getSender() == getStaticConf().getTTPId()
                 && TOMUtil.verifySignature(getStaticConf().getPublicKey(request.getSender()),
-                    request.toString().getBytes(), request.getSignature())) {
+                request.toString().getBytes(), request.getSignature())) {
             //if (request.getSender() == getStaticConf().getTTPId()) {
             logger.debug("[ServerViewController] enqueueing reconfiguration request" + request.toString());
-                this.updates.add(up);
+            this.updates.add(up);
         } else {
             logger.warn("Invalid reconfiguration from {}, discarding", up.getSender());
         }
@@ -141,9 +141,10 @@ public class ServerViewController extends ViewController {
         List<Integer> jSet = new LinkedList<>();
         List<Integer> rSet = new LinkedList<>();
         int f = -1;
-        
+
         List<String> jSetInfo = new LinkedList<>();
-        
+        boolean forceLC = false;
+
         for (int i = 0; i < updates.size(); i++) {
             ReconfigureRequest request = (ReconfigureRequest) TOMUtil.getObject(updates.get(i).getContent());
             Iterator<Integer> it = request.getProperties().keySet().iterator();
@@ -169,12 +170,9 @@ public class ServerViewController extends ViewController {
 
                         if(key == REPLACE_SERVER) {
                             int removeId = Integer.parseInt(str.nextToken());
-
                             logger.debug("[ServerViewController] removing server {} ", removeId);
-                            if(isCurrentViewMember(removeId)){
+                            if(isCurrentViewMember(removeId))
                                 rSet.add(removeId);
-                                observer.removeMarks(removeId);
-                            }
                             else
                                 logger.debug("[ServerViewController] node {} is not in the current view", removeId);
                         }
@@ -187,17 +185,13 @@ public class ServerViewController extends ViewController {
                     f = Integer.parseInt(value);
                 } else if(key == VIEW_CHANGE) {
                     logger.debug("[ServerViewController] view change message received!");
-                    return viewChange();
+                    forceLC = true;
                 }
             }
 
         }
-
-        return reconfigure(jSetInfo, jSet, rSet, f, cid);
+        return reconfigure(jSetInfo, jSet, rSet, f, cid, forceLC);
     }
-
-
-
 
     private boolean contains(int id, List<Integer> list) {
         for (int i = 0; i < list.size(); i++) {
@@ -208,59 +202,7 @@ public class ServerViewController extends ViewController {
         return false;
     }
 
-    private byte[] viewChange() {
-//        this.tomLayer.getSynchronizer().triggerTimeout(new ArrayList<>());
-        int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
-                this.tomLayer.getSynchronizer().getLCManager().setNextReg(1);
-//        this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
-        int regency = 1;
-//        int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
-        logger.debug("Sending stop for regency {}", regency);
-
-        ObjectOutputStream out = null;
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] payload;
-        try { // serialize content to send in STOP message
-            out = new ObjectOutputStream(bos);
-            out.writeBoolean(false);
-
-            out.flush();
-            bos.flush();
-
-            payload = bos.toByteArray();
-
-            out.close();
-            bos.close();
-
-            logger.debug("[ServerViewController] sending LCMessage to {}", this.getCurrentViewOtherAcceptors());
-            LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
-            this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
-
-        } catch (IOException ex) {
-            logger.error("Could not serialize STOP message", ex);
-        } finally {
-            try {
-                out.close();
-                bos.close();
-            } catch (IOException ex) {
-                logger.error("Could not serialize STOP message", ex);
-            }
-        }
-        this.tomLayer.getSynchronizer().removeSTOPretransmissions(regency-1);
-        this.tomLayer.getSynchronizer().removeSTOPretransmissions(regency-1);
-        return TOMUtil.getBytes(true);
-    }
-//
-//    public byte[] viewChange() {
-//        int regency = 1;
-//        this.tomLayer.getSynchronizer().forceVC(regency);
-//
-//        return TOMUtil.getBytes(true);
-//    }
-
-
-
-    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid) {
+    private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid, boolean forceLC) {
         lastJoinStet = new int[jSet.size()];
         int[] nextV = new int[currentView.getN() + jSet.size() - rSet.size()];
         int p = 0;
@@ -275,7 +217,8 @@ public class ServerViewController extends ViewController {
                 nextV[p++] = currentView.getProcesses()[i];
             } else if (tomLayer.execManager.getCurrentLeader() == currentView.getProcesses()[i]) {
                 logger.debug("[ServerViewController] Forcing leader change");
- 
+                forceLC = true;
+
             }
         }
 
@@ -286,7 +229,7 @@ public class ServerViewController extends ViewController {
         InetSocketAddress[] addresses = new InetSocketAddress[nextV.length];
 
         for(int i = 0 ;i < nextV.length ;i++)
-        	addresses[i] = getStaticConf().getRemoteAddress(nextV[i]);
+            addresses[i] = getStaticConf().getRemoteAddress(nextV[i]);
 
         View newV = new View(currentView.getId() + 1, nextV, f,addresses);
 
@@ -299,11 +242,54 @@ public class ServerViewController extends ViewController {
         //processes execute the leave!!!
         reconfigureTo(newV);
 
-        ReconfigureReply reply = new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
-                cid, tomLayer.execManager.getCurrentLeader());
-        logger.debug("new view processes: {}", newV.getProcesses());
-        logger.debug("cid: {} new leader: {}", cid, tomLayer.execManager.getCurrentLeader());
-        return TOMUtil.getBytes(reply);
+        if (forceLC) {
+
+            //TODO: Reactive it and make it work
+//            logger.info("Shortening LC timeout");
+//            tomLayer.requestsTimer.stopTimer();
+//            tomLayer.requestsTimer.setShortTimeout(3000);
+//            tomLayer.requestsTimer.startTimer();
+            //tomLayer.triggerTimeout(new LinkedList<TOMMessage>());
+            int lastRegency = this.tomLayer.getSynchronizer().getLCManager().getLastReg();
+            this.tomLayer.getSynchronizer().getLCManager().setNextReg(lastRegency + 1);
+            int regency = this.tomLayer.getSynchronizer().getLCManager().getNextReg();
+
+            ObjectOutputStream out = null;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            byte[] payload;
+            try { // serialize content to send in STOP message
+                out = new ObjectOutputStream(bos);
+                out.writeBoolean(false);
+
+                out.flush();
+                bos.flush();
+
+                payload = bos.toByteArray();
+
+                out.close();
+                bos.close();
+
+                logger.debug("[ServerViewController] sending LCMessage");
+                LCMessage stop = new LCMessage(this.getStaticConf().getProcessId(), TOMUtil.STOP, regency, payload);
+                this.tomLayer.getCommunication().send(this.getCurrentViewOtherAcceptors(), stop);
+
+            } catch (IOException ex) {
+                logger.error("Could not serialize STOP message", ex);
+            } finally {
+                try {
+                    out.close();
+                    bos.close();
+                } catch (IOException ex) {
+                    logger.error("Could not serialize STOP message", ex);
+                }
+            }
+            tomLayer.execManager.setNewLeader(1); //need to fix
+            logger.debug("Returning new view: {} cid {} currentLeader {} regency{} ",
+                    newV.getProcesses(), cid, tomLayer.execManager.getCurrentLeader(), regency);
+        } //end forceLC
+
+        return TOMUtil.getBytes(new ReconfigureReply(newV, jSetInfo.toArray(new String[0]),
+                cid, tomLayer.execManager.getCurrentLeader()));
     }
 
     public TOMMessage[] clearUpdates() {
@@ -329,23 +315,23 @@ public class ServerViewController extends ViewController {
 
     public void processJoinResult(ReconfigureReply r) {
         this.reconfigureTo(r.getView());
-        
+
         String[] s = r.getJoinSet();
-        
+
         this.lastJoinStet = new int[s.length];
-        
+
         for(int i = 0; i < s.length;i++){
-             StringTokenizer str = new StringTokenizer(s[i], ":");
-             int id = Integer.parseInt(str.nextToken());
-             this.lastJoinStet[i] = id;
-             String host = str.nextToken();
-             int port = Integer.valueOf(str.nextToken());
-             int portRR = Integer.valueOf(str.nextToken());
-             this.getStaticConf().addHostInfo(id, host, port, portRR);
+            StringTokenizer str = new StringTokenizer(s[i], ":");
+            int id = Integer.parseInt(str.nextToken());
+            this.lastJoinStet[i] = id;
+            String host = str.nextToken();
+            int port = Integer.valueOf(str.nextToken());
+            int portRR = Integer.valueOf(str.nextToken());
+            this.getStaticConf().addHostInfo(id, host, port, portRR);
         }
     }
 
-    
+
     @Override
     public final void reconfigureTo(View newView) {
         this.currentView = newView;
@@ -367,14 +353,14 @@ public class ServerViewController extends ViewController {
             //CODE for LEAVE   
         }else{
             //TODO: Didn't enter the system yet
-            
+
         }
     }
 
     /*public int getQuorum2F() {
         return quorum2F;
     }*/
-    
+
 
     public int getQuorum() {
         return getStaticConf().isBFT() ? quorumBFT : quorumCFT;

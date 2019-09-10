@@ -437,7 +437,7 @@ public class ServiceProxy extends TOMSender {
 
 				logger.debug("Receiving reply from " + reply.getSender()
 						+ " with reqId:" + reply.getSequence() + ". Putting on pos=" + pos);
-				logger.debug("response: {}", reply.getContent());
+
 
 				if(requestType == TOMMessageType.UNORDERED_HASHED_REQUEST)
 				{
