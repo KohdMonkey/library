@@ -43,6 +43,8 @@ public final class CounterServer extends DefaultSingleRecoverable  {
     
     private int counter = 0;
     private int iterations = 0;
+    private int interval = 50;
+    private long throughputMeasurementStartTime = System.currentTimeMillis();
 
     private ArrayList<Integer> seenTxns = new ArrayList<>();
     
@@ -75,7 +77,7 @@ public final class CounterServer extends DefaultSingleRecoverable  {
     public byte[] appExecuteOrdered(byte[] command, MessageContext msgCtx) {
         int hashcode = msgCtx.getFirstInBatch().hashCode();
         System.out.println("Request hash: " + hashcode + " is speculative: " + msgCtx.getFirstInBatch().isSpeculative());
-
+        float tp = -1;
         iterations++;
         try {
             if(!seenTxns.contains(hashcode)) {
@@ -89,6 +91,13 @@ public final class CounterServer extends DefaultSingleRecoverable  {
 
             ByteArrayOutputStream out = new ByteArrayOutputStream(4);
             new DataOutputStream(out).writeInt(counter);
+
+            if(iterations % interval == 0) {
+                tp = (float) (interval * 1000 / (float) (System.currentTimeMillis() - throughputMeasurementStartTime));
+                System.out.println("Throughput = " + tp +" operations/sec");
+                throughputMeasurementStartTime = System.currentTimeMillis();
+            }
+
             return out.toByteArray();
         } catch (IOException ex) {
             System.err.println("Invalid request received!");
