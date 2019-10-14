@@ -35,28 +35,28 @@
   	<!-- <appender-ref ref="STDOUT" /> -->
   </logger> 
 
-   <logger name="bftsmart.consensus.roles.Acceptor" level="TRACE"></logger>
-   <logger name="bftsmart.tom.ServiceReplica" level="TRACE"></logger>
-   <logger name="bftsmart.tom.ServiceProxy" level="DEBUG"></logger>
-   <logger name="bftsmart.tom.DeliveryThread" level="DEBUG"></logger>
-   <logger name="bftsmart.tom.core.TOMLayer" level="DEBUG"></logger>
-   <logger name="bftsmart.tom.core.Synchronizer" level="DEBUG"></logger>
-   <logger name="bftsmart.tom.core.ExecutionManager" level="DEBUG"></logger>
-   <logger name="bftsmart.communication.server.ServerConnection" level="TRACE"></logger>
-   <logger name="bftsmart.communication.server.ServerCommunicationSystem" level="DEBUG"></logger>
-   <logger name="bftsmart.communication.server.ServersCommunicationLayer" level="DEBUG"></logger>
-   <logger name="bftsmart.communication.MessageHandler" level="DEBUG"></logger>
-   <logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemServerSide" level="DEBUG"></logger>
-<logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemClientSide" level="DEBUG"></logger>
-   <logger name="bftsmart.clientsmanagement.ClientsManager" level="DEBUG"></logger>
-   <logger name="bftsmart.clientsmanagement.ClientData" level="DEBUG"></logger>
-   <logger name="bftsmart.byzantine.RandomDelayAcceptor" level="TRACE"></logger>
-   <logger name="bftsmart.byzantine.replica.CrashReplica" level="TRACE"></logger>
-   <logger name="bftsmart.byzantine.replica.RandomDelayReplica" level="TRACE"></logger>
-   <logger name="bftsmart.reconfiguration.ViewManager" level="TRACE"></logger>
-   <logger name="bftsmart.reconfiguration.ServerViewController" level="TRACE"></logger>
-   <logger name="bftsmart.byzantine.Observer" level="TRACE"></logger>
-   <logger name="bftsmart.byzantine.TTPManager" level="TRACE"></logger>
+   <!--<logger name="bftsmart.consensus.roles.Acceptor" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.tom.ServiceReplica" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.tom.ServiceProxy" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.tom.DeliveryThread" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.tom.core.TOMLayer" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.tom.core.Synchronizer" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.tom.core.ExecutionManager" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.communication.server.ServerConnection" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.communication.server.ServerCommunicationSystem" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.communication.server.ServersCommunicationLayer" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.communication.MessageHandler" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemServerSide" level="DEBUG"></logger>-->
+<!--<logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemClientSide" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.clientsmanagement.ClientsManager" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.clientsmanagement.ClientData" level="DEBUG"></logger>-->
+   <!--<logger name="bftsmart.byzantine.RandomDelayAcceptor" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.byzantine.replica.CrashReplica" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.byzantine.replica.RandomDelayReplica" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.reconfiguration.ViewManager" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.reconfiguration.ServerViewController" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.byzantine.Observer" level="TRACE"></logger>-->
+   <!--<logger name="bftsmart.byzantine.TTPManager" level="TRACE"></logger>-->
    
 
    
