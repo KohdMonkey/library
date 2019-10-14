@@ -565,14 +565,6 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     verifierExecutor.submit(() -> {
                         try {
                             
-                            //notifies the client manager that this request was received and get
-                            //the result of its validation
-                            //bypass for TTP
-//                            int TTPId = communication.getTTPId();
-//                            if(request.getSender() == TTPId) {
-//                                logger.debug("Bypassing request check for TTP");
-//                                request.isValid = true;
-//                            }else
                             request.isValid = clientsManager.requestReceived(request, false);
 
                             if (Thread.holdsLock(clientsManager.getClientsLock())) clientsManager.getClientsLock().unlock();
@@ -603,11 +595,11 @@ public final class TOMLayer extends Thread implements RequestReceiver {
                     //for recording delay
 //                    observer.recordProposedTime(request.hashCode(), request.receptionTimestamp);
 
-                    if(!seenSpecTxns.contains((Integer)request.hashCode()) && request.getSender() != communication.getTTPId()) {
-                        logger.debug("speculative message for request {} was withheld by leader {}",
-                                request.hashCode(), execManager.getCurrentLeader());
-                        observer.mark(execManager.getCurrentLeader());
-                    }
+//                    if(!seenSpecTxns.contains((Integer)request.hashCode()) && request.getSender() != communication.getTTPId()) {
+//                        logger.debug("speculative message for request {} was withheld by leader {}",
+//                                request.hashCode(), execManager.getCurrentLeader());
+//                        observer.mark(execManager.getCurrentLeader());
+//                    }
                 }
             }
 
