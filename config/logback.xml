@@ -45,6 +45,10 @@
     	
    <logger name="bftsmart.reconfiguration.util.ECDSAKeyLoader" level="TRACE"></logger>
 	-->
-  <logger name="bftsmart.reconfiguration.util.RSAKeyLoader" level="TRACE"></logger>
+  <!--<logger name="bftsmart.reconfiguration.util.RSAKeyLoader" level="TRACE"></logger>-->
+
+  <logger name="bftsmart.reconfiguration.util.DefaultVMServices" level="TRACE"></logger>
+  <logger name="bftsmart.reconfiguration.ServerViewController" level="DEBUG"></logger>
+  <logger name="bftsmart.reconfiguration.ViewManager" level="DEBUG"></logger>
   
 </configuration>

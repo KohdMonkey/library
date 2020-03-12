@@ -14,8 +14,11 @@ import bftsmart.reconfiguration.VMServices;
 public class DefaultVMServices extends VMServices {
     
     public static void main(String[] args) throws InterruptedException {
+        if(args[0].equals("reconfig")) {
+            System.out.println("Test");
 
-        if(args.length == 1){
+            (new DefaultVMServices()).reconfigure();
+        }else if(args.length == 1){
             System.out.println("####Tpp Service[Disjoint]####");
 
             int smartId = Integer.parseInt(args[0]);

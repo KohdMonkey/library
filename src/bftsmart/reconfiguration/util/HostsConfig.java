@@ -76,6 +76,12 @@ public class HostsConfig {
             this.servers.put(id, new Config(id, host, port, portRR));
         }
     }
+
+    public Config get(int id) {
+        if(this.servers.get(id) != null)
+            return this.servers.get(id);
+        return null;
+    }
     
     public int getNum(){
         return servers.size();

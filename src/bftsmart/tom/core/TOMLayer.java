@@ -259,6 +259,8 @@ public final class TOMLayer extends Thread implements RequestReceiver {
         return this.communication;
     }
 
+
+
     public void imAmTheLeader() {
         leaderLock.lock();
         iAmLeader.signal();

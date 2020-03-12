@@ -42,18 +42,25 @@ public class ReconfigureReply implements Externalizable {
     
     public ReconfigureReply() {
     }
+
+    public ReconfigureReply(View newView, String[] joinSet, int leader) {
+        this.newView = newView;
+        this.execLeader = leader;
+
+        if(joinSet == null){
+            this.joinSet = new String[0];
+        }else{
+            this.joinSet = joinSet;
+        }
+    }
     
     public ReconfigureReply(View newView, String[] joinSet, int lastExectConsensus, int leader) {
-      this.newView = newView;
+      this(newView, joinSet, leader);
       this.lastExecConsId = lastExectConsensus;
-      this.execLeader = leader;
-      
-      if(joinSet == null){
-          this.joinSet = new String[0];
-      }else{
-          this.joinSet = joinSet;
-      }
     }
+
+
+
 
     public View getView() {
         return newView;
@@ -79,7 +86,7 @@ public class ReconfigureReply implements Externalizable {
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
        out.writeObject(newView);
-       out.writeInt(this.lastExecConsId);
+//       out.writeInt(this.lastExecConsId);
        out.writeInt(this.execLeader);
        
        out.writeInt(joinSet.length);
@@ -92,7 +99,7 @@ public class ReconfigureReply implements Externalizable {
     @Override
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         newView = (View) in.readObject();
-        this.lastExecConsId = in.readInt();
+//        this.lastExecConsId = in.readInt();
         this.execLeader = in.readInt();
         joinSet = new String[in.readInt()];
         for(int i = 0; i < joinSet.length;i++){

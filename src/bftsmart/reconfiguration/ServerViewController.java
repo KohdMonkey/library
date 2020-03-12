@@ -16,10 +16,7 @@ limitations under the License.
 package bftsmart.reconfiguration;
 
 import java.net.InetSocketAddress;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.StringTokenizer;
+import java.util.*;
 
 import bftsmart.reconfiguration.views.View;
 import bftsmart.tom.core.TOMLayer;
@@ -72,7 +69,6 @@ public class ServerViewController extends ViewController {
             logger.info("Using view stored on disk");
             reconfigureTo(cv);
         }
-       
     }
 
     private InetSocketAddress[] getInitAdddresses() {
@@ -147,7 +143,8 @@ public class ServerViewController extends ViewController {
                             String host = str.nextToken();
                             int port = Integer.valueOf(str.nextToken());
                             int portRR = Integer.valueOf(str.nextToken());
-                            this.getStaticConf().addHostInfo(id, host, port, portRR);                        }
+                            this.getStaticConf().addHostInfo(id, host, port, portRR);
+                        }
                     }
                 } else if (key == REMOVE_SERVER) {
                     if (isCurrentViewMember(Integer.parseInt(value))) {
@@ -170,6 +167,7 @@ public class ServerViewController extends ViewController {
         }
         return false;
     }
+
 
     private byte[] reconfigure(List<String> jSetInfo, List<Integer> jSet, List<Integer> rSet, int f, int cid) {
         lastJoinStet = new int[jSet.size()];
@@ -225,6 +223,65 @@ public class ServerViewController extends ViewController {
                  cid, tomLayer.execManager.getCurrentLeader()));
     }
 
+
+    public byte[] replaceReplicas(List<Integer> rSet, List<String> toAdd) {
+        List<Integer> jSet = new ArrayList<>();
+        for(String val : toAdd) {
+            StringTokenizer str = new StringTokenizer(val, ":");
+            int id = Integer.parseInt(str.nextToken());
+            jSet.add(id);
+            String host = str.nextToken();
+            int port = Integer.valueOf(str.nextToken());
+            int portRR = Integer.valueOf(str.nextToken());
+            logger.info("adding " + id + " host: " + host + " port: " + port);
+            this.getStaticConf().addHostInfo(id, host, port, portRR);
+        }
+        int[] nextV = new int[currentView.getN() + jSet.size() - rSet.size()];
+
+        //setting the new nodes at the front of the new view
+        int p = 0;
+        for (int i = 0; i < jSet.size(); i++) {
+            nextV[p++] = jSet.get(i);
+        }
+
+        logger.info("p: " + p);
+        logger.info("next view");
+        for(int i = 0; i < nextV.length; i++) {
+            logger.info("" + nextV[i]);
+        }
+
+        logger.info("current view: " + Arrays.toString(currentView.getProcesses()));
+        logger.info("rset: " + rSet.toString());
+
+        //adding the nodes in the current view
+        for (int i = 0; i < currentView.getProcesses().length; i++) {
+            //adding to next view
+            if (!contains(currentView.getProcesses()[i], rSet)) {
+                nextV[p++] = currentView.getProcesses()[i];
+                logger.info(i + " is not in removed set, p: " + p);
+            }
+        }
+
+        //retrieve f
+        int f = currentView.getF();
+
+        InetSocketAddress[] addresses = new InetSocketAddress[nextV.length];
+
+        logger.info("nodes in the new view");
+        for(int i = 0 ;i < nextV.length ;i++) {
+            addresses[i] = getStaticConf().getRemoteAddress(nextV[i]);
+            logger.info("id: " + nextV[i]);
+            logger.info("host: " + getStaticConf().getHost(nextV[i]));
+            logger.info("port: " + getStaticConf().getPort(nextV[i]));
+            logger.info("RRport: " + getStaticConf().getServerToServerPort(nextV[i]));
+        }
+
+        View newV = new View(currentView.getId() + 1, nextV, f,addresses);
+        return TOMUtil.getBytes(new ReconfigureReply(newV, toAdd.toArray(new String[0]),0));
+    }
+
+
+
     public TOMMessage[] clearUpdates() {
         TOMMessage[] ret = new TOMMessage[updates.size()];
         for (int i = 0; i < updates.size(); i++) {
@@ -247,6 +304,11 @@ public class ServerViewController extends ViewController {
     }
 
     public void processJoinResult(ReconfigureReply r) {
+        logger.info("Received reconfigurable reply from TTP");
+        logger.info("new view: " + r.getView());
+//        tomLayer.execManager.stop();
+
+
         this.reconfigureTo(r.getView());
         
         String[] s = r.getJoinSet();
@@ -262,6 +324,7 @@ public class ServerViewController extends ViewController {
              int portRR = Integer.valueOf(str.nextToken());
              this.getStaticConf().addHostInfo(id, host, port, portRR);
         }
+
     }
 
     

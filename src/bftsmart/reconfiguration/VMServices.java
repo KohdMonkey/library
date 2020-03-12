@@ -78,6 +78,13 @@ public class VMServices {
         execute(viewManager);
 
     }
+
+
+    public void reconfigure () {
+        ViewManager viewManager = new ViewManager(keyLoader);
+        viewManager.replaceServers();
+    }
+
     
     private void execute(ViewManager viewManager) {
         

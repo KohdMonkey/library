@@ -20,10 +20,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import bftsmart.tom.util.TOMUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,6 +104,32 @@ public class ViewManager {
     public void removeServer(int id) {
         rec.removeServer(id);
     }
+
+    public void replaceServers() {
+        List<Integer> toRemove = new ArrayList<>();
+        List<String> toAdd = new ArrayList<>();
+
+        toRemove.add(2);
+        toAdd.add("4:127.0.0.1:11040:11041");
+
+        byte[] reply = this.controller.replaceReplicas(toRemove, toAdd);
+        ReconfigureReply r = (ReconfigureReply) TOMUtil.getObject(reply);
+
+        View v = r.getView();
+        logger.info("New view f: " + v.getF());
+
+        VMMessage msg = new VMMessage(id, r);
+
+        int[] processes = v.getProcesses();
+        Integer[] targets = new Integer[processes.length];
+        for(int i = 0; i < processes.length; i++) {
+            targets[i] = Integer.valueOf(processes[i]);
+        }
+
+        logger.info("Sending reconfigurable reply to targets: " + targets.toString());
+        sendResponse(targets, msg);
+    }
+
 
     public void setF(int f) {
         rec.setF(f);
