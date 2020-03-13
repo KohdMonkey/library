@@ -85,6 +85,12 @@ public class VMServices {
         viewManager.replaceServers();
     }
 
+
+//    public void test() {
+//        ViewManager viewManager = new ViewManager(keyLoader);
+//        viewManager.test();
+//    }
+
     
     private void execute(ViewManager viewManager) {
         

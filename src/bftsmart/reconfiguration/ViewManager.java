@@ -130,6 +130,15 @@ public class ViewManager {
         sendResponse(targets, msg);
     }
 
+//    public void test() {
+//        rec.addServer(4, "127.0.0.1", 11040, 11041);
+//        ReconfigureRequest request = rec.getRequest();
+//        logger.info("request: " + rec.getRequest().toString());
+//        this.controller.test(request);
+//    }
+
+
+
 
     public void setF(int f) {
         rec.setF(f);

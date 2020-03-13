@@ -297,7 +297,8 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
 		int sent = 0;
 
-		for (int target : targetArray) {
+//		for (int target : targetArray) {
+		for (int target : targets) {
 			// This is done to avoid a race condition with the writeAndFush method. Since
 			// the method is asynchronous,
 			// each iteration of this loop could overwrite the destination of the previous
@@ -309,10 +310,14 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 				continue;
 			}
 
-			sm.destination = targets[target];
+//			sm.destination = targets[target];
+			sm.destination = target;
+			logger.info("target: " + sm.destination);
 
 			rl.readLock().lock();
-			Channel channel = ((NettyClientServerSession) sessionClientToReplica.get(targets[target])).getChannel();
+			logger.info("sessions size: " + sessionClientToReplica.size());
+//			Channel channel = ((NettyClientServerSession) sessionClientToReplica.get(targets[target])).getChannel();
+			Channel channel = ((NettyClientServerSession) sessionClientToReplica.get(target)).getChannel();
 			rl.readLock().unlock();
 			if (channel.isActive()) {
 				sm.signed = sign;
@@ -322,7 +327,7 @@ public class NettyClientServerCommunicationSystemClientSide extends SimpleChanne
 
 				sent++;
 			} else {
-				logger.debug("Channel to " + targets[target] + " is not connected");
+				logger.debug("Channel to " + target + " is not connected");
 			}
 		}
 

@@ -15,6 +15,7 @@ limitations under the License.
 */
 package bftsmart.tom.core;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
@@ -30,10 +31,14 @@ import bftsmart.tom.util.KeyLoader;
 import java.io.Closeable;
 import java.security.Provider;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * This class is used to multicast messages to replicas and receive replies.
  */
 public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseable {
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private int me; // process id
 
@@ -121,6 +126,7 @@ public abstract class TOMSender implements ReplyReceiver, Closeable, AutoCloseab
 
 
 	public void TOMulticast(byte[] m, int reqId, int operationId, TOMMessageType reqType) {
+		logger.info("current view processes: " + Arrays.toString(viewController.getCurrentViewProcesses()));
 		cs.send(useSignatures, viewController.getCurrentViewProcesses(),
 				new TOMMessage(me, session, reqId, operationId, m, viewController.getCurrentViewId(),
 						reqType));

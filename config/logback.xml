@@ -50,5 +50,7 @@
   <logger name="bftsmart.reconfiguration.util.DefaultVMServices" level="TRACE"></logger>
   <logger name="bftsmart.reconfiguration.ServerViewController" level="DEBUG"></logger>
   <logger name="bftsmart.reconfiguration.ViewManager" level="DEBUG"></logger>
+  <logger name="bftsmart.tom.core.TOMSender" level="DEBUG"></logger>
+  <logger name="bftsmart.communication.client.netty.NettyClientServerCommunicationSystemClientSide" level="DEBUG"></logger>
   
 </configuration>

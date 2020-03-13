@@ -62,7 +62,8 @@ public class Reconfiguration {
     public void setF(int f){
       this.setReconfiguration(ServerViewController.CHANGE_F,String.valueOf(f));  
     }
-    
+
+    public ReconfigureRequest getRequest() { return request; }
     
     public void setReconfiguration(int prop, String value){
         if(request == null){
